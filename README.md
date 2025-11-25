@@ -1,4 +1,18 @@
-# iot-project
+# Smart-Al-Test (IoT project) 
+
+## Brief Project Overview
+
+Smart Al-Test is a handheld IoT breathalyzer using an MQ-3 sensor and FireBeetle ESP32-C6 to process readings and display them on an OLED screen. Data is sent via Bluetooth Low Energy to a Vercel web UI and stored in a Supabase backend.
+
+_For the more project details see sections below._'
+
+### Jira Task Breakdown and Difficulty
+
+Project tasks are managed in Jira, each with a difficulty rating to help estimate effort and plan timelines.
+
+Scale: 1 = easy, 3 = medium, 5 = hard
+
+You can edit a task Points by opening it and selecting the edit icon in the details panel.
 
 ### Conventional Commits
 
@@ -52,3 +66,34 @@ The types of branches that can be present in GitFlow are:
 - **feature/<scope<d>>**: Developers initiate ```feature/*``` branch from the ```dev``` branch to implement new features or address bugs. Upon completion, they integrate the changes from the ```feature/*``` branch into the ```dev``` branch. **For example:**
     - ```feature/ui```: To work on the UI of the project
     - ```feature/api```: To work on the API calls of the project
+
+## Knowing more about Smart-Al-Test 
+
+### Typical Sytem Flow   
+
+In a typical use, the user performs a breath test using the Smart Al-Test device. The ESP32-C6 processes the reading locally and displays the result on the OLED screen. The device then sends the measurement via Bluetooth Low Energy to the browser-based interface hosted on Vercel, where the user is logged in. Through this interface, the data is securely stored, retrieved, and managed using the Supabase backend, allowing the user to view their history and monitor trends over time. 
+
+### Main Technologies
+
+- **Main Hardware**
+  - [FireBeetle DFR1075 microcontroller board](https://fi.farnell.com/dfrobot/dfr1075/development-board-iot-risc-v-32bit/dp/4457347)  
+  - [MQ-3 alcohol gas sensor](https://fi.farnell.com/dfrobot/sen0128/analogue-alcohol-sensor-arduino/dp/3517899)  
+  - [OLED display for local feedback](https://www.partco.fi/fi/arduino/arduino-leikkikenttae/27138-sbc-oled01v2.html)
+  - [Li-Po AKKU 3,7V 1350mAh](https://www.partco.fi/fi/akut-ja-paristot/akkukennot/li-po-akut/20365-zlipo-l503759.html)  
+
+
+- **Connectivity**
+  - Bluetooth Low Energy (BLE) between device and browser  
+
+- **Cloud & Web**
+  - **Vercel** – hosting and deployment platform for the web app [Homepage](https://vercel.com/)  
+  - **Supabase** – PostgreSQL database + user authentication + APIs [Homepage](https://supabase.com/)  
+
+### Features
+
+- Breath alcohol measurement using MQ-3 sensor  
+- Local visualization of results on the OLED
+- BLE transmission between device and browser  
+- User login and authentication via Supabase  
+- Cloud storage of historical measurements  
+- Web dashboard for viewing results as well as short and longterm 
