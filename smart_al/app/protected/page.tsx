@@ -12,10 +12,33 @@ async function UserDetails() {
   if (error || !data?.claims) {
     redirect("/auth/login");
   }
+  // 2. Tarkista löytyykö profiilirivi user_data -taulusta
+  const { data: profile, error: profileError } = await supabase
+    .from("user_data")
+    .select("id, username")
+    .eq("user_id", data.claims.sub) // user id from auth 
+    .maybeSingle();
+
+    if (profileError) {
+      console.error("Profile fetch error:", profileError);
+    }
+
+    if (!profile){
+      const usernameFromMetadata = data.claims.user_metadata?.username;
+      const { error: insertError } = await supabase.from("user_data").insert({
+        user_id: data.claims.sub,
+        username: usernameFromMetadata
+      });
+      if (insertError) {
+        console.error("Profile insert error:", insertError);
+      }
+    }
+
 
   return JSON.stringify(data.claims, null, 2);
-}
 
+
+}
 export default function ProtectedPage() {
   return (
     <div className="flex-1 w-full flex flex-col gap-12">
