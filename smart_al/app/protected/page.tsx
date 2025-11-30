@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
-
 import { createClient } from "@/lib/supabase/server";
 import { InfoIcon } from "lucide-react";
 import { FetchDataSteps } from "@/components/tutorial/fetch-data-steps";
 import { Suspense } from "react";
+import { BlockButton } from "@/components/block-button";
 
 async function UserDetails() {
   const supabase = await createClient();
@@ -19,7 +19,15 @@ async function UserDetails() {
 export default function ProtectedPage() {
   return (
     <div className="flex-1 w-full flex flex-col gap-12">
-      <div className="w-full">
+      <div className="text-center">
+        <h2 className="text-4xl font-bold mb-4">
+          Connect Your Device
+        </h2>
+      </div>
+      <div className="flex items-center justify-center gap-2">
+        <BlockButton />
+      </div>
+      {/* <div className="w-full">
         <div className="bg-accent text-sm p-3 px-5 rounded-md text-foreground flex gap-3 items-center">
           <InfoIcon size="16" strokeWidth={2} />
           This is a protected page that you can only see as an authenticated
@@ -37,7 +45,7 @@ export default function ProtectedPage() {
       <div>
         <h2 className="font-bold text-2xl mb-4">Next steps</h2>
         <FetchDataSteps />
-      </div>
+      </div> */}
     </div>
   );
 }
