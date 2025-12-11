@@ -1,0 +1,191 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>ESP32-C6 BLE Test</title>
+<style>
+  body{font-family:system-ui,Segoe UI,Arial;margin:20px}
+  button,input{font-size:16px;padding:6px;margin:4px}
+  #log{white-space:pre-wrap;border:1px solid #ccc;padding:8px;height:200px;overflow:auto}
+  #status{font-weight:bold}
+  .connected{color:green}
+  .disconnected{color:red}
+</style>
+</head>
+<body>
+<h2>ESP32-C6 BLE Connection Test</h2>
+<button id="connect">Scan & Connect</button>
+<button id="disconnect">Disconnect</button>
+<span id="status" class="disconnected">Disconnected</span>
+<div id="log"></div>
+
+<script>
+/* =========================== */
+/*        UUID CONSTANTS       */
+/* =========================== */
+const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
+const CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
+
+/* =========================== */
+/*       GLOBAL VARIABLES      */
+/* =========================== */
+let device = null;
+let server = null;
+let service = null;
+let characteristic = null;
+let shouldAutoReconnect = true;
+
+/* =========================== */
+/*            UI              */
+/* =========================== */
+const statusEl = document.getElementById("status");
+const logEl = document.getElementById("log");
+
+function log(msg, err = false) {
+    const line = document.createElement("div");
+    line.textContent = msg;
+    if (err) line.style.color = "red";
+    logEl.appendChild(line);
+    logEl.scrollTop = logEl.scrollHeight;
+    console.log(msg);
+}
+
+/* =========================== */
+/*         RETRY HELPER       */
+/* =========================== */
+async function retry(op, tries = 3, delay = 200) {
+  for (let i = 0; i < tries; i++) {
+    try {
+      return await op();
+    } catch (err) {
+      if (i === tries - 1) throw err;
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
+}
+
+/* =========================== */
+/*      CONNECT FUNCTION       */
+/* =========================== */
+async function connectToDevice() {
+    try {
+        log("Initializing Bluetooth...");
+
+        device = await navigator.bluetooth.requestDevice({
+            filters: [{ name: "ESP32" }],
+            optionalServices: [SERVICE_UUID]
+        });
+
+        log("Device Selected: " + device.name);
+        
+        // Enable auto-reconnect when connecting
+        shouldAutoReconnect = true;
+        
+        // When disconnected, try to reconnect automatically
+        device.addEventListener("gattserverdisconnected", async () => {
+            // Only auto-reconnect if flag is true
+            if (!shouldAutoReconnect) return;
+            
+            log("Connection lost. Trying to reconnect...");
+            statusEl.textContent = "Reconnecting...";
+            
+            // Keep trying to reconnect
+            while (device && !device.gatt.connected && shouldAutoReconnect) {
+                try {
+                    await device.gatt.connect();
+                    
+                    // Once reconnected, setup everything again
+                    server = device.gatt;
+                    service = await server.getPrimaryService(SERVICE_UUID);
+                    characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
+                    await characteristic.startNotifications();
+                    characteristic.addEventListener("characteristicvaluechanged", handleNotifications);
+                    
+                    log("Reconnected successfully!");
+                    statusEl.textContent = "Connected";
+                    statusEl.className = "connected";
+                    break; // Exit the loop when connected
+                } catch (err) {
+                    log("Reconnect failed, retrying...");
+                    // Wait 2 seconds before trying again
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+            }
+        });
+
+        server = await retry(() => device.gatt.connect());
+        log("Connected to GATT Server");
+
+        service = await retry(() => server.getPrimaryService(SERVICE_UUID));
+        log("Service discovered");
+
+        characteristic = await retry(() => service.getCharacteristic(CHARACTERISTIC_UUID));
+        log("Characteristic discovered");
+
+        await retry(() => characteristic.startNotifications());
+        characteristic.addEventListener("characteristicvaluechanged", handleNotifications);
+
+        statusEl.textContent = "Connected";
+        statusEl.className = "connected";
+        log("Notifications started.");
+
+    } catch (error) {
+        log("Connection Error: " + error, true);
+    }
+}
+
+/* =========================== */
+/*      NOTIFICATION HANDLER  */
+/* =========================== */
+function handleNotifications(event) {
+    try {
+        const value = event.target.value;
+        if (value.byteLength >= 4) {
+            const dv = new DataView(value.buffer);
+            const intVal = dv.getUint32(0, true);
+            log("Received: " + intVal);
+        } else {
+            const text = new TextDecoder().decode(value);
+            log("Received: " + text);
+        }
+    } catch (err) {
+        log("Parse error: " + err.message, true);
+    }
+}
+
+/* =========================== */
+/*        DISCONNECT          */
+/* =========================== */
+async function disconnectDevice() {
+    if (!device || !server) return;
+
+    try {
+        // Disable auto-reconnect first
+        shouldAutoReconnect = false;
+        
+        await server.disconnect();
+        log("Manual disconnect OK.");
+        
+        // Clear all references
+        device = null;
+        server = null;
+        service = null;
+        characteristic = null;
+        
+        statusEl.textContent = "Disconnected";
+        statusEl.className = "disconnected";
+    } catch (err) {
+        log("Error disconnecting: " + err, true);
+    }
+}
+
+/* =========================== */
+/*        BUTTON EVENTS       */
+/* =========================== */
+document.getElementById("connect").addEventListener("click", connectToDevice);
+document.getElementById("disconnect").addEventListener("click", disconnectDevice);
+
+log('Click "Scan & Connect" to start');
+</script>
+</body>
+</html>
