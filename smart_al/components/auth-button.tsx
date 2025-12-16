@@ -14,10 +14,10 @@ export async function AuthButton() {
    if (!user) {
     return (
       <div className="flex gap-2">
-        <Button asChild size="sm" variant={"outline"}>
+        <Button asChild size="lg" variant={"outline"} className="px-8 py-6 text-lg">
           <Link href="/auth/login">Sign in</Link>
-        </Button>
-        <Button asChild size="sm" variant={"default"}>
+        </Button> 
+        <Button asChild size="lg" variant={"default"} className="px-8 py-6 text-lg">
           <Link href="/auth/sign-up">Sign up</Link>
         </Button>
       </div>
