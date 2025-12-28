@@ -10,7 +10,7 @@ async function UserDetails() {
   if (error || !data?.claims) {
     redirect("/auth/login");
   }
-  // 2. Check if user profile exists in 'user_data' table
+  // 2. Check if user profile exists in 'user_data' table in metadata table
   const { data: profile, error: profileError } = await supabase
     .from("user_data")
     .select("id, username")
