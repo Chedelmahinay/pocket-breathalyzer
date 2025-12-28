@@ -49,6 +49,10 @@
           data: { username }, // add username to metadata
         },
       });
+      if (error) {
+        setError(error.message);
+        return;
+      }
         router.push("/auth/sign-up-success");
       } catch (error: unknown) {
         setError(error instanceof Error ? error.message : "An error occurred");
