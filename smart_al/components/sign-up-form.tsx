@@ -50,9 +50,13 @@
         },
       });
       if (error) {
-        setError(error.message);
+        console.error(error);
         return;
       }
+      if (data) {
+        console.log("Sign-up successful:", data);
+      }
+      
         router.push("/auth/sign-up-success");
       } catch (error: unknown) {
         setError(error instanceof Error ? error.message : "An error occurred");
