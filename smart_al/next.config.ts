@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 
-const NextConfig = {
+const nextConfig: NextConfig = {
   cacheComponents: true,
-  eslint: {ignoreDuringBuilds: true},
 };
-export default NextConfig;
+export default nextConfig;
