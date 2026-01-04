@@ -1,0 +1,10 @@
+idf_component_register(
+    SRCS
+        "main.c"
+        "adc/oneshot_read.c"
+        "ble/gatts_demo.c"
+    INCLUDE_DIRS
+        "."
+        "adc"
+        "ble"
+)
