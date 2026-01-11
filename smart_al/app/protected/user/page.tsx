@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 export const dynamic = 'force-dynamic';
 
 export default async function UserPage() {
+ 
   const supabase = await createClient();
 
   // Hae kirjautunut käyttäjä 
