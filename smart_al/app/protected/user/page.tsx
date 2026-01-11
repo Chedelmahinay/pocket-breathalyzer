@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+export const dynamic = 'force-dynamic';
 
 export default async function UserPage() {
   const supabase = await createClient();
@@ -10,6 +11,8 @@ export default async function UserPage() {
     redirect("/auth/login"); 
   }
 
+
+  
   const user = authData.user;
 
   
@@ -31,6 +34,7 @@ export default async function UserPage() {
           </div>
         ) : (
           <>
+
             <div>
               <span className="font-medium">Username:</span>{" "}
               {profile?.username ?? "Not set username)"} 
@@ -42,7 +46,7 @@ export default async function UserPage() {
         )}
       </div>
 
-      {/* Salasanan vaihto */} //
+      {/* Salasanan vaihto */}
     </div>
   );
 }
