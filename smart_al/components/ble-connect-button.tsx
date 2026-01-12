@@ -7,8 +7,12 @@ import { Button } from "@/components/ui/button";
 const SERVICE_UUID = "000000ff-0000-1000-8000-00805f9b34fb";
 const CHARACTERISTIC_UUID = "0000ff01-0000-1000-8000-00805f9b34fb";
 
+type BleConnectButtonProps = {
+  onData: (value: number) => void;
+};
+
 //connecton status
-export function BleConnectButton() {
+export function BleConnectButton({ onData }: BleConnectButtonProps) {
   const [status, setStatus] = useState<"idle" | "connecting" | "connected" | "failed">(
     "idle"
   );
@@ -35,6 +39,7 @@ export function BleConnectButton() {
     } catch (err) {
       console.error("Initial device selection error:", err);
       setStatus("idle");
+      return;
     }
   }
 
@@ -47,6 +52,7 @@ export function BleConnectButton() {
     reconnectAttempts.current = 0;
     console.log("Disconnected");
     setStatus("idle");
+    return;
   }
 
   async function attemptConnection() {
@@ -75,10 +81,12 @@ export function BleConnectButton() {
           const target =
             event.target as BluetoothRemoteGATTCharacteristic; //event target type so TypeScripts is not bitching
           const value = target.value!; //value is DataView holding raw bytes
-          //bytes as 32-bit unsingend int & little endian
+          //bytes as 16-bit unsingend int & little endian
           const dv = new DataView(value.buffer);
-          const data = dv.getUint32(0, true);
-          console.log("Received:", data);
+          const data = dv.getFloat32(0, true);
+          const roundedData: number = parseFloat(data.toFixed(2));
+          console.log("Received:", roundedData);
+          onData(roundedData);
         }
       );
 
@@ -99,6 +107,7 @@ export function BleConnectButton() {
         setStatus("failed");
         deviceRef.current = null;
         serverRef.current = null;
+        return;
       }
     }
   }

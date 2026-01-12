@@ -1,7 +1,7 @@
 {
     "version":            "1.2",
     "project_name":       "gatt_server_demos",
-    "project_version":    "141213a-dirty",
+    "project_version":    "4f82263-dirty",
     "project_path":       "C:/Users/zvllv/Desktop/temp/UNI/IoT Project/iot-project/smart_al/esp32/gatt_server",
     "idf_path":           "C:/Users/zvllv/esp/v5.4.3/esp-idf",
     "build_dir":          "C:/Users/zvllv/Desktop/temp/UNI/IoT Project/iot-project/smart_al/esp32/gatt_server/build",

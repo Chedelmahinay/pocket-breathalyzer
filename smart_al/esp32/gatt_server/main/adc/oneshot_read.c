@@ -22,26 +22,51 @@ const static char *TAG = "EXAMPLE";
 #define EXAMPLE_ADC_ATTEN           ADC_ATTEN_DB_12
 
 static int adc_raw[2][10];
-static int voltage[2][10];
 
-static bool example_adc_calibration_init(adc_unit_t unit, adc_channel_t channel,
-                                         adc_atten_t atten, adc_cali_handle_t *out_handle);
-static void example_adc_calibration_deinit(adc_cali_handle_t handle);
+static QueueHandle_t adc_queue;
+
+static int baseline = 0;
+static bool calibrated = false;
+static int calibration_samples = 0;
+static int calibration_sum = 0;
 
 static void adc_task(void *arg)
 {
     adc_oneshot_unit_handle_t adc1_handle = (adc_oneshot_unit_handle_t)arg;
 
     while (1) {
-        ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN0, &adc_raw[0][0]));
-        ESP_LOGI(TAG, "ADC%d Channel[%d] Raw Data: %d",
-                 ADC_UNIT_1 + 1, EXAMPLE_ADC1_CHAN0, adc_raw[0][0]);
+        ESP_ERROR_CHECK(
+            adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN0, &adc_raw[0][0])
+        );
+
+        float bac_value;
+
+        if (!calibrated) {
+            calibration_sum += adc_raw[0][0];
+            calibration_samples++;
+
+            if (calibration_samples >= 10) {
+                baseline = calibration_sum / 10;
+                calibrated = true;
+            }
+
+            bac_value = 0.0f;
+        } else {
+            int diff = adc_raw[0][0] - baseline;
+            if (diff < 0) diff = 0;
+            bac_value = (float)diff * 0.0001f;
+        }
+
+        xQueueOverwrite(adc_queue, &bac_value);
+
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 
-void adc_init(void)
+void adc_init(QueueHandle_t q)
 {
+    adc_queue = q;
+
     adc_oneshot_unit_handle_t adc1_handle;
     adc_oneshot_unit_init_cfg_t init_config1 = {
         .unit_id = ADC_UNIT_1,
@@ -55,5 +80,5 @@ void adc_init(void)
     ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, EXAMPLE_ADC1_CHAN0, &config));
     ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, EXAMPLE_ADC1_CHAN1, &config));
 
-    xTaskCreate(adc_task, "adc_task", 4096, adc1_handle, 5, NULL);
+    xTaskCreate(adc_task, "adc_task", 512, adc1_handle, tskIDLE_PRIORITY, NULL);
 }
