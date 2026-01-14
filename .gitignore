@@ -44,3 +44,30 @@ next-env.d.ts
 
 #vscode
 .vscode
+
+# ESP-IDF build outputs
+build/
+sdkconfig
+sdkconfig.old
+
+# Dependencies
+managed_components/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project dependencies
+dependencies.lock
+
+# Python
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
