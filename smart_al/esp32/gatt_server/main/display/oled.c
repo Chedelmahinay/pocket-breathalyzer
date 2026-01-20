@@ -13,6 +13,10 @@
 #define OLED_SCL_GPIO   GPIO_NUM_20
 #define OLED_I2C_ADDR   0x3C   
 
+/* 
+   Static libraries below are only included in this latest push. 
+   Further code logic will be added to dynamically update the OLED display with ui button data. 
+*/
 
 static void oled_task(void *arg)
 {
@@ -37,12 +41,34 @@ static void oled_task(void *arg)
     /* Static only*/
     ssd1306_clear_display(oled, false);
 
+
+
+    
     /*The "BATT   MQ3   BLE" is a concept text holder only where sensor data will be displayed in future*/
+/*
+
+    
     ssd1306_display_text(oled, 0, "BATT   MQ3   BLe", false);
     ssd1306_display_text(oled, 1, "----------------", false);
     ssd1306_display_text_x2(oled, 3, "  START ", false);
-    ssd1306_display_text_x2(oled, 6, " RESULTS", false);
-    
+    ssd1306_display_text_x2(oled, 6, " RESULTS", false); 
+ */
+
+/*
+    ssd1306_display_text_x2(oled, 1, "BLE NOT", false);
+    ssd1306_display_text_x2(oled, 4, " READY! ", false);
+    ssd1306_display_text(oled, 6, "----------------", false);
+    ssd1306_display_text(oled, 7, "  tap to menu ", false);
+
+*/
+
+
+    ssd1306_display_text_x2(oled, 1, "MQ3 NOT", false);
+    ssd1306_display_text_x2(oled, 4, " READY! ", false);
+    ssd1306_display_text(oled, 6, "----------------", false);
+    ssd1306_display_text(oled, 7, "  tap to menu ", false);
+
+
 
     vTaskDelete(NULL);
 }
