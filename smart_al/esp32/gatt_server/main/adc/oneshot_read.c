@@ -9,6 +9,10 @@
 #include "esp_adc/adc_cali.h"
 #include "esp_adc/adc_cali_scheme.h"
 
+#define LOG_LOCAL_LEVEL ESP_LOG_INFO
+#include "esp_log.h"
+static float maxValue = 0.0f;
+
 const static char *TAG = "EXAMPLE";
 
 #if CONFIG_IDF_TARGET_ESP32
@@ -57,6 +61,12 @@ static void adc_task(void *arg)
             bac_value = (float)diff * 0.0001f;
         }
 
+        if (bac_value > maxValue){
+            maxValue = bac_value;            
+        }
+        ESP_LOGI(TAG, "maxValue: %f",  maxValue);
+        ESP_LOGI(TAG, "bac: %f",  bac_value);
+
         xQueueOverwrite(adc_queue, &bac_value);
 
         vTaskDelay(pdMS_TO_TICKS(1000));
@@ -80,5 +90,5 @@ void adc_init(QueueHandle_t q)
     ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, EXAMPLE_ADC1_CHAN0, &config));
     ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, EXAMPLE_ADC1_CHAN1, &config));
 
-    xTaskCreate(adc_task, "adc_task", 512, adc1_handle, tskIDLE_PRIORITY, NULL);
+    xTaskCreate(adc_task, "adc_task", 2048, adc1_handle, tskIDLE_PRIORITY, NULL);
 }

@@ -665,7 +665,7 @@ void ble_init(QueueHandle_t q)
         ESP_LOGE(GATTS_TAG, "set local  MTU failed, error code = %x", local_mtu_ret);
     }
 
-    xTaskCreate(ble_notify_task, "ble_notify", 2048, NULL, configMAX_PRIORITIES - 1, NULL);
+    xTaskCreate(ble_notify_task, "ble_notify", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
     
     return;
 }

@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 const SERVICE_UUID = "000000ff-0000-1000-8000-00805f9b34fb";
 const CHARACTERISTIC_UUID = "0000ff01-0000-1000-8000-00805f9b34fb";
 
+let maxValue = 0;
+
 type BleConnectButtonProps = {
   onData: (value: number) => void;
 };
@@ -20,7 +22,7 @@ export function BleConnectButton({ onData }: BleConnectButtonProps) {
   const deviceRef = useRef<BluetoothDevice | null>(null);
   const serverRef = useRef<BluetoothRemoteGATTServer | null>(null);
   const reconnectAttempts = useRef(0); //reconnect attempt count
-  const maxReconnectAttempts = 5; //max reconnect attempt
+  const maxReconnectAttempts = 10; //max reconnect attempt
 
   //triggered by user click
   async function connect() {
@@ -50,6 +52,7 @@ export function BleConnectButton({ onData }: BleConnectButtonProps) {
     deviceRef.current = null;
     serverRef.current = null;
     reconnectAttempts.current = 0;
+    maxValue = 0;
     console.log("Disconnected");
     setStatus("idle");
     return;
@@ -85,8 +88,12 @@ export function BleConnectButton({ onData }: BleConnectButtonProps) {
           const dv = new DataView(value.buffer);
           const data = dv.getFloat32(0, true);
           const roundedData: number = parseFloat(data.toFixed(2));
-          console.log("Received:", roundedData);
-          onData(roundedData);
+          console.log("maxValue:", maxValue);
+          if (roundedData > maxValue){
+            maxValue = roundedData;
+            console.log("Received:", roundedData);
+            onData(roundedData);
+          }
         }
       );
 
