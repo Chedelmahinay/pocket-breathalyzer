@@ -20,9 +20,9 @@ export function UserCard() {
         const { data: { user: authUser } } = await supabase.auth.getUser();
         if (authUser) {
           const { data, error } = await supabase
-            .from('user_data')
+            .from('profiles')
             .select('username, email, created_at')
-            .eq('user_id', authUser.id)
+            .eq('id', authUser.id)
             .single();
 
           if (error) throw error;
