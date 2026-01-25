@@ -1,15 +1,10 @@
-import AccountForm from "@/components/account-form"
-import { createClient } from '@/lib/supabase/server'
+import { UserCard } from '@/components/UserCard';
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
-export default async function Account() {
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  return <AccountForm user={user} />
+export default function ProfilePage() {
+  return (
+    <div className="mx-auto max-w-2xl p-6 space-y-6">
+      <h1 className="text-2xl font-semibold">Profile</h1>
+      <UserCard />
+    </div>
+  );
 }
