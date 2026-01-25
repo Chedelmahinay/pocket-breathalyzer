@@ -19,7 +19,7 @@ export default function ProtectedLayout({
             <div className="flex gap-5 items-center font-semibold">
               <Link href={"/"}>Smart-Al Meter</Link>
               <Link href={"/protected/ranking"}>Ranking</Link>
-              <Link href={"/protected/user"}>Profile</Link>
+              <Link href={"/protected/account"}>Profile</Link>
             </div>
             {!hasEnvVars ? (
               <EnvVarWarning />

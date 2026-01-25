@@ -1,0 +1,15 @@
+import AccountForm from "@/components/account-form"
+import { createClient } from '@/lib/supabase/server'
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+export default async function Account() {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  return <AccountForm user={user} />
+}
