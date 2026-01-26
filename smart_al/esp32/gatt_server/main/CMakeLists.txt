@@ -3,8 +3,10 @@ idf_component_register(
         "main.c"
         "adc/oneshot_read.c"
         "ble/gatts_demo.c"
+        "nvs/nvs.c"
     INCLUDE_DIRS
         "."
         "adc"
         "ble"
+        "nvs"
 )
