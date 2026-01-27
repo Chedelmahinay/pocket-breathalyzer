@@ -4,9 +4,11 @@ idf_component_register(
         "adc/oneshot_read.c"
         "ble/gatts_demo.c"
         "buttons/buttons.c"
+        "display/oled.c"
     INCLUDE_DIRS
         "."
         "adc"
         "ble"
         "buttons"
+        "display"
 )
