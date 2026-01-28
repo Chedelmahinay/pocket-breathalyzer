@@ -34,7 +34,12 @@ export async function AuthButton() {
 
   return (
     <div className="flex items-center gap-4">
-      {username}
+      <Link
+        href="/protected/account"
+        className="text-sm font-medium text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white"
+      >
+        {username}
+      </Link>
       <LogoutButton />
     </div>
   );
@@ -42,4 +47,3 @@ export async function AuthButton() {
 
 
   
-
