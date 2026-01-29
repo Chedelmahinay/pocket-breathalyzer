@@ -8,12 +8,13 @@
 #include "esp_adc/adc_oneshot.h"
 #include "esp_adc/adc_cali.h"
 #include "esp_adc/adc_cali_scheme.h"
+#include "nvs.h"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_INFO
-#include "esp_log.h"
 static float maxValue = 0.0f;
 
-const static char *TAG = "EXAMPLE";
+const static char *ADC_TAG = "ADC";
+const static char *NVS_TAG = "NVS";
 
 #if CONFIG_IDF_TARGET_ESP32
 #define EXAMPLE_ADC1_CHAN0          ADC_CHANNEL_4
@@ -37,6 +38,14 @@ static int calibration_sum = 0;
 static void adc_task(void *arg)
 {
     adc_oneshot_unit_handle_t adc1_handle = (adc_oneshot_unit_handle_t)arg;
+
+    esp_err_t err = nvs_load_max_value(&maxValue);
+    if (err == ESP_OK) {
+        ESP_LOGI(NVS_TAG, "Restored maxValue from NVS: %f", maxValue);
+    } else {
+        ESP_LOGI(NVS_TAG, "No saved maxValue, starting fresh");
+        maxValue = 0.0f;
+    }
 
     while (1) {
         ESP_ERROR_CHECK(
@@ -62,10 +71,11 @@ static void adc_task(void *arg)
         }
 
         if (bac_value > maxValue){
-            maxValue = bac_value;            
+            maxValue = bac_value;
+            nvs_save_max_value(maxValue);            
         }
-        ESP_LOGI(TAG, "maxValue: %f",  maxValue);
-        ESP_LOGI(TAG, "bac: %f",  bac_value);
+        ESP_LOGI(ADC_TAG, "maxValue: %f",  maxValue);
+        ESP_LOGI(ADC_TAG, "bac: %f",  bac_value);
 
         xQueueOverwrite(adc_queue, &bac_value);
 

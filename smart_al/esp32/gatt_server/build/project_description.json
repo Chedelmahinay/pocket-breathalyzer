@@ -1,7 +1,7 @@
 {
     "version":            "1.2",
     "project_name":       "gatt_server_demos",
-    "project_version":    "fe6cc5d-dirty",
+    "project_version":    "06fd546-dirty",
     "project_path":       "C:/Users/zvllv/Desktop/temp/UNI/IoT Project/iot-project/smart_al/esp32/gatt_server",
     "idf_path":           "C:/Users/zvllv/esp/v5.4.3/esp-idf",
     "build_dir":          "C:/Users/zvllv/Desktop/temp/UNI/IoT Project/iot-project/smart_al/esp32/gatt_server/build",
@@ -1195,8 +1195,8 @@
             "managed_reqs": [],
             "managed_priv_reqs": [],
             "file": "C:/Users/zvllv/Desktop/temp/UNI/IoT Project/iot-project/smart_al/esp32/gatt_server/build/esp-idf/main/libmain.a",
-            "sources": [ "C:/Users/zvllv/Desktop/temp/UNI/IoT Project/iot-project/smart_al/esp32/gatt_server/main/main.c", "C:/Users/zvllv/Desktop/temp/UNI/IoT Project/iot-project/smart_al/esp32/gatt_server/main/adc/oneshot_read.c", "C:/Users/zvllv/Desktop/temp/UNI/IoT Project/iot-project/smart_al/esp32/gatt_server/main/ble/gatts_demo.c" ],
-            "include_dirs": [ ".", "adc", "ble" ]
+            "sources": [ "C:/Users/zvllv/Desktop/temp/UNI/IoT Project/iot-project/smart_al/esp32/gatt_server/main/main.c", "C:/Users/zvllv/Desktop/temp/UNI/IoT Project/iot-project/smart_al/esp32/gatt_server/main/adc/oneshot_read.c", "C:/Users/zvllv/Desktop/temp/UNI/IoT Project/iot-project/smart_al/esp32/gatt_server/main/ble/gatts_demo.c", "C:/Users/zvllv/Desktop/temp/UNI/IoT Project/iot-project/smart_al/esp32/gatt_server/main/nvs/nvs.c" ],
+            "include_dirs": [ ".", "adc", "ble", "nvs" ]
         },
         "mbedtls": {
             "alias": "idf::mbedtls",
@@ -2830,7 +2830,7 @@
             "priv_reqs": [],
             "managed_reqs": [],
             "managed_priv_reqs": [],
-            "include_dirs": [ ".", "adc", "ble" ]
+            "include_dirs": [ ".", "adc", "ble", "nvs" ]
         }
     },
     "debug_prefix_map_gdbinit": "",
