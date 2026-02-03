@@ -52,9 +52,9 @@ export function EditProfileForm({
 
     const nextUsername = username.trim();
     const nextName = name.trim() || null;
-    const nextEmail = email.trim();
+    const nextEmail = email.trim(); // remove whitespace but do not allow null
     const nextAge = age.trim() === '' ? null : Number(age);
-    const nextWeight = weight.trim() === '' ? null : Number(weight);
+    const nextWeight = weight.trim() === '' ? null : Number(weight); // allow null
     const nextHeight = height.trim() === '' ? null : Number(height);
 
     if (!nextUsername) {
@@ -65,10 +65,10 @@ export function EditProfileForm({
 
     if (Number.isNaN(nextAge) || Number.isNaN(nextWeight) || Number.isNaN(nextHeight)) {
       setError('Age, weight, and height must be numbers.');
-      setSaving(false);
+      setSaving(false); //error handling for number fields
       return;
     }
-
+// Update profile in 'profiles' table
     try {
       const { error: profileError } = await supabase
         .from('profiles')
@@ -76,13 +76,13 @@ export function EditProfileForm({
           username: nextUsername,
           name: nextName,
           age: nextAge,
-          weight: nextWeight,
+          weight: nextWeight,  
           height: nextHeight,
         })
         .eq('id', userId);
 
       if (profileError) throw profileError;
-
+        // Update email in auth system if it has changed
       if (nextEmail && nextEmail !== initialEmail) {
         const { error: authError } = await supabase.auth.updateUser({
           email: nextEmail,
@@ -90,14 +90,14 @@ export function EditProfileForm({
         if (authError) throw authError;
         setNotice('Email change requested. Check your inbox to confirm.');
       }
-
+      // Sync email in 'profiles' table
       const { error: emailSyncError } = await supabase
         .from('profiles')
         .update({ email: nextEmail })
         .eq('id', userId);
 
       if (emailSyncError) throw emailSyncError;
-
+      // when save is clicked
       onSaved?.({
         username: nextUsername,
         name: nextName,
