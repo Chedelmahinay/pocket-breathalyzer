@@ -46,7 +46,9 @@ function ResultsTableWrapper({
   searchParams?: Promise<{ page?: string }>;
 }) {
   // Resolve search params inside Suspense to avoid blocking the route.
-  const resolvedParams = use(searchParams ?? Promise.resolve({}));
+  const resolvedParams = use(
+    searchParams ?? Promise.resolve<{ page?: string }>({})
+  );
   const rawPage = resolvedParams.page ?? "1";
   const parsedPage = Number.parseInt(rawPage, 10);
   const currentPage = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
