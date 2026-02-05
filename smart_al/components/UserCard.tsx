@@ -3,7 +3,9 @@
 import { useEffect, useState, useMemo } from 'react';
 import { createClient } from "@/lib/supabase/client";
 import { EditProfileForm } from '@/components/edit-profile-form';
-
+import { UpdatePasswordForm } from '@/components/update-password-form';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+// displays the user info in a card form with an edit button to toggle the edit form
 interface User {
   username: string;
   name?: string | null;
@@ -20,7 +22,7 @@ export function UserCard() {
   const [isEditing, setIsEditing] = useState(false);
   const [authUserId, setAuthUserId] = useState<string | null>(null);
   const supabase = useMemo(() => createClient(), []);
-
+  // fetching user profile from supabase
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -29,7 +31,7 @@ export function UserCard() {
           const { data, error } = await supabase
             .from('profiles')
             .select('username, email, name, age, weight, height, created_at')
-            .eq('id', authUser.id)
+            .eq('id', authUser.id) // match by auth user id
             .single();
 
           if (error) throw error;
@@ -51,73 +53,85 @@ export function UserCard() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between border-b border-slate-200 pb-4 dark:border-slate-800">
-        <div>
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Profile</p>
-          <p className="mt-1 text-xl font-semibold text-slate-900 dark:text-slate-100">
-            {isEditing ? 'Editing' : user.username}
-          </p>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle>Profile</CardTitle>
+            <CardDescription>
+              {isEditing ? 'Editing' : user.username}
+            </CardDescription>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsEditing((prev) => !prev)}
+            className="text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+          >
+            {isEditing ? 'Close' : 'Edit'}
+          </button>
+        </CardHeader>
+        <CardContent>
+          {isEditing && authUserId ? (
+            <EditProfileForm
+              userId={authUserId} 
+              initialUsername={user.username}
+              initialName={user.name}   //pull in the initial values from database 
+              initialEmail={user.email}
+              initialAge={user.age}
+              initialWeight={user.weight}
+              initialHeight={user.height}
+              onSaved={(next) => {    //update the user state when save is pressed 
+                setUser((prev) => (prev ? { ...prev, ...next } : prev));
+                setIsEditing(false);
+              }}
+              onCancel={() => setIsEditing(false)}
+            />
+          ) : (
+            <div className="space-y-3 text-sm">
+              <div className="grid grid-cols-[140px_1fr] items-center gap-6 border-b border-slate-200 pb-3 dark:border-slate-800">
+                <span className="text-slate-500 dark:text-slate-400">Name</span>
+                <span className="font-medium text-slate-900 dark:text-slate-100">{user.name || '-'}</span>
+              </div>
+              <div className="grid grid-cols-[140px_1fr] items-center gap-6 border-b border-slate-200 pb-3 dark:border-slate-800">
+                <span className="text-slate-500 dark:text-slate-400">Age</span>
+                <span className="font-medium text-slate-900 dark:text-slate-100">
+                  {user.age ?? '-'}
+                </span>
+              </div>
+              <div className="grid grid-cols-[140px_1fr] items-center gap-6 border-b border-slate-200 pb-3 dark:border-slate-800">
+                <span className="text-slate-500 dark:text-slate-400">Weight</span>
+                <span className="font-medium text-slate-900 dark:text-slate-100">
+                  {user.weight ?? '-'}
+                </span>
+              </div>
+              <div className="grid grid-cols-[140px_1fr] items-center gap-6 border-b border-slate-200 pb-3 dark:border-slate-800">
+                <span className="text-slate-500 dark:text-slate-400">Height</span>
+                <span className="font-medium text-slate-900 dark:text-slate-100">
+                  {user.height ?? '-'}
+                </span>
+              </div>
+              <div className="grid grid-cols-[140px_1fr] items-center gap-6 border-b border-slate-200 pb-3 dark:border-slate-800">
+                <span className="text-slate-500 dark:text-slate-400">Email</span>
+                <span className="font-medium text-slate-900 dark:text-slate-100 break-all">{user.email}</span>
+              </div>
+              <div className="grid grid-cols-[140px_1fr] items-center gap-6">
+                <span className="text-slate-500 dark:text-slate-400">Account Created</span>
+                <span className="font-medium text-slate-900 dark:text-slate-100">
+                  {new Date(user.created_at).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      <div className="border-t border-slate-200 pt-5 dark:border-slate-800">
+        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Security</p>
+        <p className="mt-1 text-xl font-semibold text-slate-900 dark:text-slate-100">
+          Password
+        </p>
+        <div className="mt-4">
+          <UpdatePasswordForm />
         </div>
-        <button
-          type="button"
-          onClick={() => setIsEditing((prev) => !prev)}
-          className="text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
-        >
-          {isEditing ? 'Close' : 'Edit'}
-        </button>
       </div>
-
-      {isEditing && authUserId ? (
-        <EditProfileForm
-          userId={authUserId}
-          initialUsername={user.username}
-          initialName={user.name}
-          initialEmail={user.email}
-          initialAge={user.age}
-          initialWeight={user.weight}
-          initialHeight={user.height}
-          onSaved={(next) => {
-            setUser((prev) => (prev ? { ...prev, ...next } : prev));
-            setIsEditing(false);
-          }}
-          onCancel={() => setIsEditing(false)}
-        />
-      ) : (
-        <div className="space-y-3 text-sm">
-          <div className="grid grid-cols-[140px_1fr] items-center gap-6 border-b border-slate-200 pb-3 dark:border-slate-800">
-            <span className="text-slate-500 dark:text-slate-400">Name</span>
-            <span className="font-medium text-slate-900 dark:text-slate-100">{user.name || '-'}</span>
-          </div>
-          <div className="grid grid-cols-[140px_1fr] items-center gap-6 border-b border-slate-200 pb-3 dark:border-slate-800">
-            <span className="text-slate-500 dark:text-slate-400">Age</span>
-            <span className="font-medium text-slate-900 dark:text-slate-100">
-              {user.age ?? '-'}
-            </span>
-          </div>
-          <div className="grid grid-cols-[140px_1fr] items-center gap-6 border-b border-slate-200 pb-3 dark:border-slate-800">
-            <span className="text-slate-500 dark:text-slate-400">Weight</span>
-            <span className="font-medium text-slate-900 dark:text-slate-100">
-              {user.weight ?? '-'}
-            </span>
-          </div>
-          <div className="grid grid-cols-[140px_1fr] items-center gap-6 border-b border-slate-200 pb-3 dark:border-slate-800">
-            <span className="text-slate-500 dark:text-slate-400">Height</span>
-            <span className="font-medium text-slate-900 dark:text-slate-100">
-              {user.height ?? '-'}
-            </span>
-          </div>
-          <div className="grid grid-cols-[140px_1fr] items-center gap-6 border-b border-slate-200 pb-3 dark:border-slate-800">
-            <span className="text-slate-500 dark:text-slate-400">Email</span>
-            <span className="font-medium text-slate-900 dark:text-slate-100 break-all">{user.email}</span>
-          </div>
-          <div className="grid grid-cols-[140px_1fr] items-center gap-6">
-            <span className="text-slate-500 dark:text-slate-400">Account Created</span>
-            <span className="font-medium text-slate-900 dark:text-slate-100">
-              {new Date(user.created_at).toLocaleDateString()}
-            </span>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

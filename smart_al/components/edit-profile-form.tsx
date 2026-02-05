@@ -7,9 +7,9 @@ interface EditProfileFormProps {
   userId: string;
   initialUsername: string;
   initialName?: string | null;
-  initialEmail: string;
+  initialEmail: string; 
   initialAge?: number | null;
-  initialWeight?: number | null;
+  initialWeight?: number | null;  
   initialHeight?: number | null;
   onSaved?: (next: {
     username: string;
