@@ -7,6 +7,7 @@ type ResultRow = {
   username: string | null;
   bac: number | null;
   created_at: string | null;
+  user_id: string | null;
 };
 
 type ResultsPageProps = {
@@ -69,7 +70,8 @@ async function ResultsTable({ page }: { page: number }) {
 
   const { data: dbData, error, count } = await supabase
     .from("measurements_with_username")
-    .select("username, bac, created_at", { count: "exact" })
+    .select("username, bac, created_at, user_id", { count: "exact" })
+    .eq("user_id", authData.user.id)
     .order("bac", { ascending: false })
     .order("created_at", { ascending: false })
     .range(begin, end);
