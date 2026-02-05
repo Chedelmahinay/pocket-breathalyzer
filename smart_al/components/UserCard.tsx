@@ -27,15 +27,24 @@ export function UserCard() {
     const fetchUser = async () => {
       try {
         const { data: { user: authUser } } = await supabase.auth.getUser();
+      
         if (authUser) {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('username, email, name, age, weight, height, created_at')
-            .eq('id', authUser.id) // match by auth user id
-            .single();
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('username, name, age, weight, height, created_at')
+          .eq('id', authUser.id) // match by auth user id
+          .single();
 
           if (error) throw error;
-          setUser(data);
+          setUser({
+            username: data.username,
+            name: data.name,
+            email: authUser.email ?? '',
+            age: data.age,
+            weight: data.weight,
+            height: data.height,
+            created_at: data.created_at,
+          });
           setAuthUserId(authUser.id);
         }
       } catch (error) {

@@ -83,20 +83,13 @@ export function EditProfileForm({
 
       if (profileError) throw profileError;
         // Update email in auth system if it has changed
-      if (nextEmail && nextEmail !== initialEmail) {
+    if (nextEmail && nextEmail !== initialEmail) {
         const { error: authError } = await supabase.auth.updateUser({
           email: nextEmail,
         });
         if (authError) throw authError;
         setNotice('Email change requested. Check your inbox to confirm.');
       }
-      // Sync email in 'profiles' table
-      const { error: emailSyncError } = await supabase
-        .from('profiles')
-        .update({ email: nextEmail })
-        .eq('id', userId);
-
-      if (emailSyncError) throw emailSyncError;
       // when save is clicked
       onSaved?.({
         username: nextUsername,

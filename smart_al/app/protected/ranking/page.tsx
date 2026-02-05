@@ -4,10 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 
 type ResultRow = {
+  rank: number | null;
   username: string | null;
-  bac: number | null;
-  created_at: string | null;
-  user_id: string | null;
+  value: number | null;
 };
 
 type ResultsPageProps = {
@@ -21,10 +20,10 @@ export default function ResultsPage({ searchParams }: ResultsPageProps) {
     <div className="mx-auto w-full max-w-6xl p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-          Results
+          Ranking
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          at the moment displays the user history
+          top results across all users
         </p>
       </div>
 
@@ -69,11 +68,9 @@ async function ResultsTable({ page }: { page: number }) {
   const end = begin + pageSize - 1; 
 
   const { data: dbData, error, count } = await supabase
-    .from("measurements_with_username")
-    .select("username, bac, created_at, user_id", { count: "exact" })
-    .eq("user_id", authData.user.id)
-    .order("bac", { ascending: false })
-    .order("created_at", { ascending: false })
+    .from("weekly_leaderboard_current_week") // This view joins measurements with users to get the username in one query.
+    .select("rank, username, value", { count: "exact" })
+    .order("rank", { ascending: true })
     .range(begin, end);
 
   if (error) {
@@ -87,12 +84,12 @@ async function ResultsTable({ page }: { page: number }) {
   // Defensive sort to keep order stable even if backend changes.
   const data =
     (dbData as ResultRow[] | null)?.sort((a, b) => {
-      const bacA = a.bac ?? Number.NEGATIVE_INFINITY;
-      const bacB = b.bac ?? Number.NEGATIVE_INFINITY;
-      if (bacA !== bacB) return bacB - bacA;
-      const timeA = a.created_at ? Date.parse(a.created_at) : 0;
-      const timeB = b.created_at ? Date.parse(b.created_at) : 0;
-      return timeB - timeA;
+      const rankA = a.rank ?? Number.POSITIVE_INFINITY;
+      const rankB = b.rank ?? Number.POSITIVE_INFINITY;
+      if (rankA !== rankB) return rankA - rankB;
+      const valueA = a.value ?? Number.NEGATIVE_INFINITY;
+      const valueB = b.value ?? Number.NEGATIVE_INFINITY;
+      return valueB - valueA;
     }) ?? null;
 
   const total = count ?? 0;
@@ -107,27 +104,25 @@ async function ResultsTable({ page }: { page: number }) {
           <table className="min-w-full text-left text-sm">
             <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:bg-slate-900/40 dark:text-slate-400">
               <tr>
+                <th className="px-4 py-3 font-medium">Rank</th>
                 <th className="px-4 py-3 font-medium">Username</th>
-                <th className="px-4 py-3 font-medium">BAC</th>
-                <th className="px-4 py-3 font-medium">Timestamp</th>
+                <th className="px-4 py-3 font-medium">Value</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
               {data?.length ? (
                 data.map((row, index) => (
                   <tr
-                    key={`${row.username ?? "user"}-${row.created_at ?? index}`}
+                    key={`${row.username ?? "user"}-${row.rank ?? index}`}
                     className="text-slate-700 dark:text-slate-200"
                   >
                     <td className="px-4 py-3 font-medium">
+                      {row.rank ?? "-"}
+                    </td>
+                    <td className="px-4 py-3 font-medium">
                       {row.username ?? "Unknown"}
                     </td>
-                    <td className="px-4 py-3">{row.bac ?? "-"}</td>
-                    <td className="px-4 py-3 text-slate-500 dark:text-slate-400">
-                      {row.created_at
-                        ? new Date(row.created_at).toLocaleString()
-                        : "-"}
-                    </td>
+                    <td className="px-4 py-3">{row.value ?? "-"}</td>
                   </tr>
                 ))
               ) : (
