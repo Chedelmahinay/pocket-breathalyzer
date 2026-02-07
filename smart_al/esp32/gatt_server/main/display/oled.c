@@ -41,12 +41,12 @@ typedef struct {
     QueueHandle_t button_q;
 } oled_task_params_t;
 
-/* ---- Top bar values (hook to real data later) ---- */
+// Top bar Values
 static int  g_batt_percent = 87;
 static bool g_mq3_ready    = true;
 static bool g_ble_ready    = false;
 
-/* ---- Draw 8x8 font text at arbitrary x position ---- */
+// Draw 8x8 font
 static void draw_text_at(ssd1306_handle_t oled, uint8_t page, uint8_t seg, const char *text, bool invert)
 {
     uint8_t img[8];
@@ -64,7 +64,7 @@ static void draw_text_at(ssd1306_handle_t oled, uint8_t page, uint8_t seg, const
     }
 }
 
-/* ---- Pick battery icon by percent ---- */
+// battery icon logic // placeholder to be replaced
 static const uint8_t *select_batt_icon(int batt_percent)
 {
     if (batt_percent < 0) batt_percent = 0;
@@ -75,12 +75,11 @@ static const uint8_t *select_batt_icon(int batt_percent)
     return icon_batt_empty_16x8;
 }
 
-/* ---- Draw ONLY the top bar (page 0) + divider (page 1) ---- */
+// Top bar icons and value placeholders draw
 static void draw_top_bar_static(ssd1306_handle_t oled)
 {
     const uint8_t *batt_icon = select_batt_icon(g_batt_percent);
 
-    // page 0
     ssd1306_display_bitmap(oled, 0, 0, batt_icon, ICON_W, ICON_H, false);
     ssd1306_display_bitmap(oled, 52, 0, icon_mq3_16x8, ICON_W, ICON_H, false);
     ssd1306_display_bitmap(oled, 92, 0, icon_ble_16x8, ICON_W, ICON_H, false);
@@ -92,26 +91,20 @@ static void draw_top_bar_static(ssd1306_handle_t oled)
     draw_text_at(oled, 0, 70, g_mq3_ready ? "OK" : "X", false);
     draw_text_at(oled, 0, 110, g_ble_ready ? "OK" : "X", false);
 
-    // page 1 divider
     ssd1306_display_text(oled, 1, "----------------", false);
 }
 
-/* ---- Clear ONLY content area (pages 2..7). Top bar stays. ---- */
+// Clear content area but Top bar stays
 static void clear_content_area(ssd1306_handle_t oled)
 {
-    // Each page is 8px tall and 128px wide => 128 bytes if you write raw pixels.
-    // We'll just print blank text lines to wipe those pages.
-    // pages 2..7 correspond to text rows 2..7 for ssd1306_display_text().
 
     for (int row = 2; row <= 7; row++) {
-        ssd1306_display_text(oled, row, "                ", false); // 16 spaces = 128px
+        ssd1306_display_text(oled, row, "                ", false); 
     }
 }
 
-/* ---- Menu drawing ---- */
 static void draw_menu_static(ssd1306_handle_t oled)
 {
-    // Top bar should already be drawn. Just clear content below it.
     clear_content_area(oled);
 }
 
@@ -121,7 +114,7 @@ static void draw_menu_selection_only(ssd1306_handle_t oled, menu_sel_t sel)
     ssd1306_display_text_x2(oled, 6, " RESULTS", (sel == SEL_RESULTS));
 }
 
-/* ---- Content screens (below divider only) ---- */
+// Content screen below divider
 static void draw_start_screen_content(ssd1306_handle_t oled)
 {
     clear_content_area(oled);
@@ -136,7 +129,7 @@ static void draw_results_screen_content(ssd1306_handle_t oled)
     ssd1306_display_text(oled, 5, "GPIO4 = back", false);
 }
 
-/* ---- OLED task ---- */
+// OLED
 static void oled_task(void *arg)
 {
     oled_task_params_t *p = (oled_task_params_t *)arg;
@@ -156,7 +149,7 @@ static void oled_task(void *arg)
     oled_cfg.i2c_address = OLED_I2C_ADDR;
     ssd1306_init(bus, &oled_cfg, &oled);
 
-    // Draw top bar ONCE (static)
+    // static draw
     ssd1306_clear_display(oled, false);
     draw_top_bar_static(oled);
 
@@ -180,7 +173,7 @@ static void oled_task(void *arg)
                     sel = (sel == SEL_START) ? SEL_RESULTS : SEL_START;
                     draw_menu_selection_only(oled, sel);
                 } else if (ev.gpio == BTN_CONFIRM_GPIO) {
-                    // Confirm -> switch screen, but keep top bar static
+                    // keep static
                     if (sel == SEL_START) {
                         screen = SCREEN_START;
                         draw_start_screen_content(oled);
@@ -190,7 +183,7 @@ static void oled_task(void *arg)
                     }
                 }
             } else {
-                // Subscreen: GPIO4 back to menu (top bar remains)
+                // GPIO4 back to menu
                 if (ev.gpio == BTN_CONFIRM_GPIO) {
                     screen = SCREEN_MENU;
                     draw_menu_static(oled);

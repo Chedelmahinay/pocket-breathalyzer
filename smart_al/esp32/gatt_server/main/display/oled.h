@@ -7,7 +7,6 @@
 extern "C" {
 #endif
 
-// OLED listens to button events from this queue
 void oled_init(QueueHandle_t button_q);
 
 #ifdef __cplusplus
