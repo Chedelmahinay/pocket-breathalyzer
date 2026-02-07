@@ -14,12 +14,14 @@ typedef struct {
 } button_event_t;
 
 typedef struct {
-    gpio_num_t gpio;
     QueueHandle_t out_queue;
 } buttons_task_params_t;
 
-// Configures GPIO + ISR. Does NOT create tasks.
+// Old single-button init (kept for compatibility)
 bool buttons_hw_init(gpio_num_t button_gpio);
 
-// Task body: debounces and sends button_event_t to out_queue.
+// New: init 2 buttons (toggle + confirm)
+bool buttons_hw_init_multi(gpio_num_t gpio_a, gpio_num_t gpio_b);
+
+// Task body: debounces and sends button_event_t to out_queue
 void buttons_task(void *param);
