@@ -101,3 +101,18 @@ void buttons_task(void *param)
         }
     }
 }
+
+bool buttons_init(QueueHandle_t out_queue, gpio_num_t gpio_a, gpio_num_t gpio_b)
+{
+    if (!buttons_hw_init_multi(gpio_a, gpio_b)) {
+        ESP_LOGE(TAG, "buttons_hw_init_multi failed");
+        return false;
+    }
+
+    static buttons_task_params_t params;
+    params.out_queue = out_queue;
+
+    xTaskCreate(buttons_task, "buttons_task", 2048, &params, 10, NULL);
+
+    return true;
+}

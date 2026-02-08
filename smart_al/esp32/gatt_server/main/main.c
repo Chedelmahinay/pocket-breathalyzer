@@ -17,7 +17,6 @@
 QueueHandle_t adc_queue;
 static QueueHandle_t button_queue;
 
-static buttons_task_params_t btn_params;
 
 void app_main(void)
 {
@@ -26,19 +25,10 @@ void app_main(void)
 
     ble_init(adc_queue);
     adc_init(adc_queue);
-
-    // Init both buttons
-    if (!buttons_hw_init_multi(BTN_TOGGLE_GPIO, BTN_CONFIRM_GPIO)) {
-        ESP_LOGE(TAG, "buttons_hw_init_multi failed");
-        return;
-    }
-
-    btn_params.out_queue = button_queue;
-
-    xTaskCreate(buttons_task, "buttons_task", 2048, &btn_params, 10, NULL);
-
+    buttons_init(button_queue, BTN_TOGGLE_GPIO, BTN_CONFIRM_GPIO);
     oled_init(button_queue);
 
+    //just a debug
     ESP_LOGI(TAG, "Buttons: TOGGLE=GPIO%d CONFIRM=GPIO%d",
              (int)BTN_TOGGLE_GPIO, (int)BTN_CONFIRM_GPIO);
 }
