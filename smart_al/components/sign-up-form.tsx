@@ -28,31 +28,58 @@
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
 
-    const handleSignUp = async (e: React.FormEvent) => {
-      e.preventDefault();
-      const supabase = createClient();
-      setIsLoading(true);
-      setError(null);
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const supabase = createClient();
+    setIsLoading(true);
+    setError(null);
 
-      if (password !== repeatPassword) {
-        setError("Passwords do not match");
-        setIsLoading(false);
+    if (password !== repeatPassword) {
+      setError("Passwords do not match");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const nextUsername = username.trim();
+      const nextEmail = email.trim();
+      if (!nextUsername) {
+        setError("Username is required");
         return;
       }
-
-      try {
+      // Username availability is enforced by the database unique constraint.
+      // sign up user to database 
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: nextEmail,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/protected`,
-          data: { username }, // add username to metadata
+          data: { username: nextUsername }, // add username to metadata
         },
       });
       if (error) {
-        console.error(error);
+        const message = error.message ?? "An error occurred";
+        const lowered = message.toLowerCase();
+        if (
+          lowered.includes("database error saving new user") ||
+          lowered.includes("duplicate") ||
+          lowered.includes("unique constraint") ||
+          lowered.includes("profiles_username_lower_key") ||
+          lowered.includes("username")
+        ) {
+          setError("Username already taken. Please choose another.");
+        } else {
+          setError(message);
+        }
         return;
       }
+      // check if email is in use
+      const identityCount = data?.user?.identities?.length ?? 0;
+      if (data?.user && identityCount === 0) {
+        setError("Email already registered");
+        return;
+      }
+
       if (data) {
         console.log("Sign-up successful:", data);
       }
