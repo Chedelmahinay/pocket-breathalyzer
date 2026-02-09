@@ -16,5 +16,6 @@
     "--background-index",
     "--query-driver=C:\\Users\\zvllv\\.espressif\\tools\\riscv32-esp-elf\\esp-14.2.0_20250730\\riscv32-esp-elf\\bin\\riscv32-esp-elf-gcc.exe",
     "--compile-commands-dir=c:\\Users\\zvllv\\Desktop\\temp\\UNI\\IoT Project\\iot-project\\smart_al\\bleTest\\gatt_server\\build"
-  ]
+  ],
+  "idf.currentSetup": "C:\\Users\\zvllv\\esp\\v5.4.3\\esp-idf"
 }
