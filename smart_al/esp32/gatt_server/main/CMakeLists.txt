@@ -5,10 +5,12 @@ idf_component_register(
         "ble/gatts_demo.c"
         "buttons/buttons.c"
         "display/oled.c"
+        "nvs/nvs.c"
     INCLUDE_DIRS
         "."
         "adc"
         "ble"
         "buttons"
         "display"
+        "nvs"
 )

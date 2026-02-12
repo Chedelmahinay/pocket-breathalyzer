@@ -14,12 +14,22 @@
 #define BTN_TOGGLE_GPIO  GPIO_NUM_9
 #define BTN_CONFIRM_GPIO GPIO_NUM_4
 
+#include <stdint.h>            
+#include "freertos/FreeRTOS.h" 
+#include "freertos/queue.h"    
+#include "adc/oneshot_read.h"  
+#include "ble/gatts_demo.h"    
+#include "nvs.h"
+
 QueueHandle_t adc_queue;
 static QueueHandle_t button_queue;
 
 
+
 void app_main(void)
 {
+    nvs_init();
+
     adc_queue = xQueueCreate(1, sizeof(float));
     button_queue = xQueueCreate(8, sizeof(button_event_t));
 
