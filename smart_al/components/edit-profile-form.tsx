@@ -11,6 +11,7 @@ interface EditProfileFormProps {
   initialAge?: number | null;
   initialWeight?: number | null;  
   initialHeight?: number | null;
+  initialGender?: string | null;
   onSaved?: (next: {
     username: string;
     name?: string | null;
@@ -18,6 +19,7 @@ interface EditProfileFormProps {
     age?: number | null;
     weight?: number | null;
     height?: number | null;
+    gender?: string | null;
   }) => void;
   onCancel?: () => void;
 }
@@ -30,6 +32,7 @@ export function EditProfileForm({
   initialAge,
   initialWeight,
   initialHeight,
+  initialGender,
   onSaved,
   onCancel,
 }: EditProfileFormProps) {
@@ -39,6 +42,7 @@ export function EditProfileForm({
   const [age, setAge] = useState(initialAge?.toString() ?? '');
   const [weight, setWeight] = useState(initialWeight?.toString() ?? '');
   const [height, setHeight] = useState(initialHeight?.toString() ?? '');
+  const [gender, setGender] = useState(initialGender ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -56,6 +60,7 @@ export function EditProfileForm({
     const nextAge = age.trim() === '' ? null : Number(age);
     const nextWeight = weight.trim() === '' ? null : Number(weight); // allow null
     const nextHeight = height.trim() === '' ? null : Number(height);
+    const nextGender = gender.trim() === '' ? null : gender.trim();
 
     if (!nextUsername) {
       setError('Username is required.');
@@ -78,6 +83,7 @@ export function EditProfileForm({
           age: nextAge,
           weight: nextWeight,  
           height: nextHeight,
+          gender: nextGender,
         })
         .eq('id', userId);
 
@@ -98,6 +104,7 @@ export function EditProfileForm({
         age: nextAge,
         weight: nextWeight,
         height: nextHeight,
+        gender: nextGender,
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Update failed';
@@ -109,76 +116,92 @@ export function EditProfileForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-slate-600 dark:text-slate-300">
-          Username
-        </label>
-        <input
-          className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-900 dark:border-slate-700 dark:bg-black dark:text-slate-100"
-          value={username}
-          onChange={(event) => setUsername(event.target.value)}
-          required
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-slate-600 dark:text-slate-300">
-          Name
-        </label>
-        <input
-          className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-900 dark:border-slate-700 dark:bg-black dark:text-slate-100"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-slate-600 dark:text-slate-300">
-          Email
-        </label>
-        <input
-          type="email"
-          className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-900 dark:border-slate-700 dark:bg-black dark:text-slate-100"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          required
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-slate-600 dark:text-slate-300">
-          Age
-        </label>
-        <input
-          type="number"
-          className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-900 dark:border-slate-700 dark:bg-black dark:text-slate-100"
-          value={age}
-          onChange={(event) => setAge(event.target.value)}
-          min={0}
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-slate-600 dark:text-slate-300">
-          Weight
-        </label>
-        <input
-          type="number"
-          className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-900 dark:border-slate-700 dark:bg-black dark:text-slate-100"
-          value={weight}
-          onChange={(event) => setWeight(event.target.value)}
-          min={0}
-          step="0.1"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-slate-600 dark:text-slate-300">
-          Height
-        </label>
-        <input
-          type="number"
-          className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-900 dark:border-slate-700 dark:bg-black dark:text-slate-100"
-          value={height}
-          onChange={(event) => setHeight(event.target.value)}
-          min={0}
-          step="0.1"
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-300">
+            Username
+          </label>
+          <input
+            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-900 dark:border-slate-700 dark:bg-black dark:text-slate-100"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-300">
+            Name
+          </label>
+          <input
+            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-900 dark:border-slate-700 dark:bg-black dark:text-slate-100"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+          />
+        </div>
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-300">
+            Email
+          </label>
+          <input
+            type="email"
+            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-900 dark:border-slate-700 dark:bg-black dark:text-slate-100"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-300">
+            Age
+          </label>
+          <input
+            type="number"
+            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-900 dark:border-slate-700 dark:bg-black dark:text-slate-100"
+            value={age}
+            onChange={(event) => setAge(event.target.value)}
+            min={0}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-300">
+            Weight
+          </label>
+          <input
+            type="number"
+            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-900 dark:border-slate-700 dark:bg-black dark:text-slate-100"
+            value={weight}
+            onChange={(event) => setWeight(event.target.value)}
+            min={0}
+            step="0.1"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-300">
+            Height
+          </label>
+          <input
+            type="number"
+            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-900 dark:border-slate-700 dark:bg-black dark:text-slate-100"
+            value={height}
+            onChange={(event) => setHeight(event.target.value)}
+            min={0}
+            step="0.1"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-300">
+            Gender
+          </label>
+          <select
+            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-900 dark:border-slate-700 dark:bg-black dark:text-slate-100"
+            value={gender}
+            onChange={(event) => setGender(event.target.value)}
+          >
+            <option value="">Select</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+        </div>
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}

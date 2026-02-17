@@ -6,7 +6,7 @@ type ProjectSectionProps = {
 
 export function ProjectSection({ description, howItWorks, features }: ProjectSectionProps) {
   return (
-    <div className="w-full max-w-5xl mt-20 px-4 sm:px-0">
+    <div className="w-full max-w-5xl mt-10 sm:mt-14 px-4 sm:px-0">
       <div className="max-w-3xl mx-auto">
         <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-center">
           Project Description
