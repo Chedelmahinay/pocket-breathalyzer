@@ -1,4 +1,3 @@
-
 import { EnvVarWarning } from "@/components/env-var-warning";
 import { AuthButton } from "@/components/auth-button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
@@ -20,6 +19,7 @@ export default function ProtectedLayout({
               <Link href={"/"}>Smart-Al Meter</Link>
               <Link href={"/protected/history"}>History</Link>
               <Link href={"/protected/ranking"}>Ranking</Link>
+              <Link href={"/protected/chat"}>Chat</Link>
               <Link href={"/protected/account"}>Profile</Link>
             </div>
             {!hasEnvVars ? (
