@@ -35,15 +35,12 @@ function sanitizeMessages(input: unknown): ChatMessage[] {
     .map((item) => {
       const role = item.role;
       const content = item.content;
-
       if (
         (role !== "user" && role !== "assistant") ||
-        typeof content !== "string" ||
-        !content.trim()
+        typeof content !== "string" || !content.trim()
       ) {
         return null;
       }
-
       return {
         role,
         content: content.trim(),
@@ -68,12 +65,12 @@ function formatUserProfile(profile: {
     `Gender: ${profile.gender ?? "unknown"}`,
   ].join("\n");
 }
-
+// latest results in string format to be included in the system prompt for the AI model
 function formatLatestMeasurements(measurements: MeasurementRow[] | null) {
   if (!measurements?.length) {
     return "No recent BAC measurements found.";
   }
-
+ // Format each measurement with its BAC value and timestamp, and join them into a single string
   return measurements
     .map((measurement, index) => {
       const timestamp = measurement.created_at
@@ -94,7 +91,7 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
-
+ // supabase client creation and user authentication
   try {
     const supabase = await createClient();
     const {
@@ -106,7 +103,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = (await request.json()) as { messages?: unknown };
+    const body = (await request.json()) as { messages?: unknown }; // user input messages from the request body
     const messages = sanitizeMessages(body.messages);
 
     if (!messages.length) {
@@ -116,7 +113,7 @@ export async function POST(request: Request) {
     if (!messages.some((message) => message.role === "user")) {
       return NextResponse.json({ error: "A user message is required." }, { status: 400 });
     }
-
+      // load the user's profile data 
     const { data: profileData, error: profileError } = await supabase
       .from("profiles")
       .select("name, age, weight, height, gender")
@@ -129,6 +126,7 @@ export async function POST(request: Request) {
         { status: 500 },
       );
     }
+    // format the user profile data into a string that can be included in the system prompt for the AI model
     const profileContext = formatUserProfile({
       name: profileData?.name ?? null,
       age: profileData?.age ?? null,
@@ -136,7 +134,7 @@ export async function POST(request: Request) {
       height: profileData?.height ?? null,
       gender: profileData?.gender ?? null,
     });
-
+    // Measurements history (max 5 latest)
     const { data: measurementData, error: measurementError } = await supabase
       .from("measurements_with_username")
       .select("bac, created_at")
@@ -151,7 +149,7 @@ export async function POST(request: Request) {
     const measurementContext = formatLatestMeasurements(
       (measurementData as MeasurementRow[] | null) ?? null,
     );
-
+    // inject the user profile and latest measurements into the system prompt for the AI model
     const systemPrompt = `${BASE_SYSTEM_PROMPT}
 
 User profile data:
@@ -159,14 +157,13 @@ ${profileContext}
 
 Latest BAC measurements:
 ${measurementContext}`;
-
     const { text } = await generateText({
-      model: google("gemini-2.5-flash"),
+      model: google("gemma-3-27b-it"), // ai model 
       system: systemPrompt,
       messages,
     });
 
-    return NextResponse.json({ reply: text });
+    return NextResponse.json({ reply: text }); // returns the response 
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to generate chat response.";
     return NextResponse.json({ error: message }, { status: 500 });
