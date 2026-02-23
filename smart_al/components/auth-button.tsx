@@ -33,14 +33,17 @@ export async function AuthButton() {
   const username = profile?.username ?? user.email;
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-3 md:gap-4">
+      <div className="order-1 md:order-2">
+        <LogoutButton />
+      </div>
       <Link
         href="/protected/account"
-        className="text-sm font-medium text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white"
+        className="order-2 max-w-24 truncate text-sm font-medium text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white md:order-1 md:max-w-40"
+        title={username ?? undefined}
       >
         {username}
       </Link>
-      <LogoutButton />
     </div>
   );
 }
