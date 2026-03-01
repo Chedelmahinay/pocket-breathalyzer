@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -26,6 +27,9 @@
 
 #define TAG "oled"
 
+#define UI_TICK_MS         250
+#define BAC_CHANGE_EPSILON 0.0003f
+
 typedef enum {
     SEL_START = 0,
     SEL_RESULTS
@@ -39,14 +43,14 @@ typedef enum {
 
 typedef struct {
     QueueHandle_t button_q;
+    QueueHandle_t adc_q;   
 } oled_task_params_t;
 
-// Top bar Values
+// static. might be dangerous but only used by oled_task
 static int  g_batt_percent = 87;
 static bool g_mq3_ready    = true;
 static bool g_ble_ready    = false;
 
-// Draw 8x8 font
 static void draw_text_at(ssd1306_handle_t oled, uint8_t page, uint8_t seg, const char *text, bool invert)
 {
     uint8_t img[8];
@@ -64,7 +68,6 @@ static void draw_text_at(ssd1306_handle_t oled, uint8_t page, uint8_t seg, const
     }
 }
 
-// battery icon logic // placeholder to be replaced
 static const uint8_t *select_batt_icon(int batt_percent)
 {
     if (batt_percent < 0) batt_percent = 0;
@@ -75,7 +78,6 @@ static const uint8_t *select_batt_icon(int batt_percent)
     return icon_batt_empty_16x8;
 }
 
-// Top bar icons and value placeholders draw
 static void draw_top_bar_static(ssd1306_handle_t oled)
 {
     const uint8_t *batt_icon = select_batt_icon(g_batt_percent);
@@ -94,7 +96,6 @@ static void draw_top_bar_static(ssd1306_handle_t oled)
     ssd1306_display_text(oled, 1, "----------------", false);
 }
 
-// Clear content area but Top bar stays
 static void clear_content_area(ssd1306_handle_t oled)
 {
 
@@ -114,13 +115,41 @@ static void draw_menu_selection_only(ssd1306_handle_t oled, menu_sel_t sel)
     ssd1306_display_text_x2(oled, 6, " RESULTS", (sel == SEL_RESULTS));
 }
 
-// Content screen below divider
+static void make_centered_x2(char *out, size_t out_sz, const char *txt)
+{
+    const int cols = 8;
+    int len = (int)strlen(txt);
+    if (len > cols) len = cols;
+
+    int lead = (cols - len) / 2;
+    int idx = 0;
+
+    for (int i = 0; i < lead && idx < (int)out_sz - 1; i++) out[idx++] = ' ';
+    for (int i = 0; i < len  && idx < (int)out_sz - 1; i++) out[idx++] = txt[i];
+    while (idx < cols && idx < (int)out_sz - 1) out[idx++] = ' ';
+
+    out[idx] = '\0';
+}
+
+static void draw_bac_centered_x2(ssd1306_handle_t oled, float bac)
+{
+    char num[12];
+    snprintf(num, sizeof(num), "%0.3f", (double)bac);
+
+    char line[16];
+    make_centered_x2(line, sizeof(line), num);
+    ssd1306_display_text_x2(oled, 4, line, false);
+}
+
 static void draw_start_screen_content(ssd1306_handle_t oled)
 {
     clear_content_area(oled);
-    ssd1306_display_text(oled, 3, "START SCREEN", false);
-    ssd1306_display_text(oled, 5, "GPIO4 = back", false);
+
+    char line[16];
+    make_centered_x2(line, sizeof(line), "0.000");
+    ssd1306_display_text_x2(oled, 4, line, false);
 }
+
 
 static void draw_results_screen_content(ssd1306_handle_t oled)
 {
@@ -149,55 +178,74 @@ static void oled_task(void *arg)
     oled_cfg.i2c_address = OLED_I2C_ADDR;
     ssd1306_init(bus, &oled_cfg, &oled);
 
-    // static draw
     ssd1306_clear_display(oled, false);
     draw_top_bar_static(oled);
 
     screen_t screen = SCREEN_MENU;
     menu_sel_t sel = SEL_START;
 
-    // Menu init (below divider only)
-    draw_menu_static(oled);
+    clear_content_area(oled);
     draw_menu_selection_only(oled, sel);
 
-    ESP_LOGI(TAG, "UI ready. GPIO9 toggles (menu), GPIO4 confirms/back.");
+    ESP_LOGI(TAG, "UI ready.");
+
+    float last_bac = -999.0f;
+    bool  have_bac = false;
+
+    const TickType_t tick = pdMS_TO_TICKS(UI_TICK_MS);
 
     while (1) {
         button_event_t ev;
 
-        if (xQueueReceive(p->button_q, &ev, portMAX_DELAY) == pdTRUE) {
+        if (xQueueReceive(p->button_q, &ev, tick) == pdTRUE) {
             if (ev.type != BUTTON_EVENT_PRESSED) continue;
 
             if (screen == SCREEN_MENU) {
                 if (ev.gpio == BTN_TOGGLE_GPIO) {
                     sel = (sel == SEL_START) ? SEL_RESULTS : SEL_START;
                     draw_menu_selection_only(oled, sel);
+
                 } else if (ev.gpio == BTN_CONFIRM_GPIO) {
-                    // keep static
                     if (sel == SEL_START) {
                         screen = SCREEN_START;
                         draw_start_screen_content(oled);
+
+                        last_bac = -999.0f;
+                        have_bac = false;
                     } else {
                         screen = SCREEN_RESULTS;
                         draw_results_screen_content(oled);
                     }
                 }
+
             } else {
-                // GPIO4 back to menu
                 if (ev.gpio == BTN_CONFIRM_GPIO) {
                     screen = SCREEN_MENU;
-                    draw_menu_static(oled);
+                    clear_content_area(oled);
                     draw_menu_selection_only(oled, sel);
+                }
+            }
+
+        } else {
+            if (screen == SCREEN_START && p->adc_q) {
+                float bac_now;
+                if (xQueuePeek(p->adc_q, &bac_now, 0) == pdTRUE) {
+                    if (!have_bac || fabsf(bac_now - last_bac) > BAC_CHANGE_EPSILON) {
+                        draw_bac_centered_x2(oled, bac_now);
+                        last_bac = bac_now;
+                        have_bac = true;
+                    }
                 }
             }
         }
     }
 }
 
-void oled_init(QueueHandle_t button_q)
+void oled_init(QueueHandle_t button_q, QueueHandle_t adc_q)
 {
     static oled_task_params_t params;
     params.button_q = button_q;
+    params.adc_q    = adc_q;
 
     xTaskCreate(oled_task, "oled_task", 4096, &params, 5, NULL);
 }

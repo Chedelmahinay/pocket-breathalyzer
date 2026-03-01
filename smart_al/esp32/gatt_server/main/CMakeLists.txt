@@ -6,6 +6,7 @@ idf_component_register(
         "buttons/buttons.c"
         "display/oled.c"
         "nvs/nvs.c"
+        "fanout/adc_fanout.c"
     INCLUDE_DIRS
         "."
         "adc"
@@ -13,4 +14,5 @@ idf_component_register(
         "buttons"
         "display"
         "nvs"
+        "fanout"
 )

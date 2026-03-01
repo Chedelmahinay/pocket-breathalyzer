@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-void oled_init(QueueHandle_t button_q);
+void oled_init(QueueHandle_t button_q, QueueHandle_t adc_q);
 
 #ifdef __cplusplus
 }
