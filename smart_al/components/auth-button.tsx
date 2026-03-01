@@ -3,10 +3,13 @@ import { Button } from "./ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { LogoutButton } from "./logout-button";
 
-export async function AuthButton() {
+type AuthButtonProps = {
+  showGoProtected?: boolean;
+};
+
+export async function AuthButton({ showGoProtected = false }: AuthButtonProps) {
   const supabase = await createClient();
 
-  // You can also use getUser() which will be slower.
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -34,12 +37,22 @@ export async function AuthButton() {
 
   return (
     <div className="flex items-center gap-4">
+      {/* Only on Landing Page when enabled */}
+      {showGoProtected && (
+        <Link
+          href="/protected"
+          className="text-sm font-semibold text-blue-400 hover:text-blue-300 transition-colors">   
+          Open MyApp Here
+        </Link>
+      )}
+
       <Link
         href="/protected/account"
         className="text-sm font-medium text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white"
       >
         {username}
       </Link>
+
       <LogoutButton />
     </div>
   );
