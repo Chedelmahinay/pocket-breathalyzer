@@ -12,7 +12,9 @@ export default function Home() {
       <div className="flex-1 w-full flex flex-col gap-20 items-center">
         <Navbar
           logo={<Link href="/#home">Smart Al-Test</Link>}
+          mobileActionsSide="right"
           links={[
+            { href: "/protected", label: "Dashboard" },
             { href: "/#guide", label: "Guide" },
             { href: "/#project", label: "Project" },
           ]}

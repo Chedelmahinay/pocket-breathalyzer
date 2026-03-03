@@ -16,8 +16,9 @@ export default function ProtectedLayout({
       <div className="flex-1 w-full flex flex-col gap-20 items-center">
         <Navbar
           logo={<Link href={"/"}>Smart-Al Meter</Link>}
-          mobileInlineActionsSide="right"
+          mobileActionsSide="right"
           links={[
+            { href: "/protected", label: "Dashboard" },
             { href: "/protected/history", label: "History" },
             { href: "/protected/ranking", label: "Ranking" },
             { href: "/protected/chat", label: "Chat" },

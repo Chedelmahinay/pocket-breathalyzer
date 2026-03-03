@@ -12,31 +12,31 @@ interface NavbarProps {
   logo?: ReactNode;
   links?: Array<{ href: string; label: string }>;
   actions?: ReactNode;
-  forceHamburger?: boolean;
-  forceHamburgerActionsSide?: "left" | "right";
-  mobileInlineActionsSide?: "left" | "right";
+  alwaysShowMenuButton?: boolean;
+  menuButtonActionsSide?: "left" | "right";
+  mobileActionsSide?: "left" | "right";
 }
 
 export function Navbar({
   logo,
   links = [],
   actions,
-  forceHamburger = false,
-  forceHamburgerActionsSide = "left",
-  mobileInlineActionsSide,
+  alwaysShowMenuButton = false,
+  menuButtonActionsSide = "left",
+  mobileActionsSide,
 }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const hasLinks = links.length > 0;
-  const hasMobileInlineActions = !forceHamburger && !!actions && !!mobileInlineActionsSide;
-  const showInlineRightActions =
+  const hasMobileSideActions = !alwaysShowMenuButton && !!actions && !!mobileActionsSide;
+  const showRightSideActions =
     !!actions &&
-    ((forceHamburger && forceHamburgerActionsSide === "right") ||
-      (hasMobileInlineActions && mobileInlineActionsSide === "right"));
-  const showInlineLeftActions =
+    ((alwaysShowMenuButton && menuButtonActionsSide === "right") ||
+      (hasMobileSideActions && mobileActionsSide === "right"));
+  const showLeftSideActions =
     !!actions &&
-    ((forceHamburger && forceHamburgerActionsSide === "left") ||
-      (hasMobileInlineActions && mobileInlineActionsSide === "left"));
+    ((alwaysShowMenuButton && menuButtonActionsSide === "left") ||
+      (hasMobileSideActions && mobileActionsSide === "left"));
 
   useEffect(() => {
     setIsOpen(false);
@@ -47,7 +47,7 @@ export function Navbar({
       <div
         className={cn(
           "w-full max-w-5xl p-3 px-5 text-sm",
-          forceHamburger
+          alwaysShowMenuButton
             ? "flex flex-col gap-2"
             : "md:h-16 md:flex md:justify-between md:items-center",
         )}
@@ -55,15 +55,15 @@ export function Navbar({
         <div className="flex items-center justify-between gap-3">
           <div className="flex gap-5 items-center font-semibold min-w-0">
             <div className="min-w-0 truncate">{logo}</div>
-            {showInlineLeftActions ? (
-              <div className={cn("min-w-0 flex items-center", !forceHamburger && "md:hidden")}>
+            {showLeftSideActions ? (
+              <div className={cn("min-w-0 flex items-center", !alwaysShowMenuButton && "md:hidden")}>
                 {actions}
               </div>
             ) : null}
             <div
               className={cn(
                 "gap-5 items-center",
-                forceHamburger ? "hidden" : "hidden md:flex",
+                alwaysShowMenuButton ? "hidden" : "hidden md:flex",
               )}
             >
               {links.map((link) => (
@@ -74,12 +74,12 @@ export function Navbar({
             </div>
           </div>
 
-          <div className={cn("flex items-center gap-2", forceHamburger && "md:gap-3")}>
-            {showInlineRightActions ? (
+          <div className={cn("flex items-center gap-2", alwaysShowMenuButton && "md:gap-3")}>
+            {showRightSideActions ? (
               <div
                 className={cn(
                   "min-w-0 flex items-center justify-end",
-                  !forceHamburger && "md:hidden",
+                  !alwaysShowMenuButton && "md:hidden",
                 )}
               >
                 {actions}
@@ -92,8 +92,9 @@ export function Navbar({
                 variant="ghost"
                 size="icon"
                 className={cn(
-                  !forceHamburger && "md:hidden",
-                  forceHamburger && "h-11 w-11 md:h-12 md:w-12",
+                  // Menu button is mobile only
+                  !alwaysShowMenuButton && "md:hidden",
+                  alwaysShowMenuButton && "h-11 w-11 md:h-12 md:w-12",
                 )}
                 aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
                 aria-expanded={isOpen}
@@ -101,9 +102,9 @@ export function Navbar({
                 onClick={() => setIsOpen((open) => !open)}
               >
                 {isOpen ? (
-                  <X className={cn(forceHamburger && "h-5 w-5 md:h-6 md:w-6")} />
+                  <X className={cn(alwaysShowMenuButton && "h-5 w-5 md:h-6 md:w-6")} />
                 ) : (
-                  <Menu className={cn(forceHamburger && "h-5 w-5 md:h-6 md:w-6")} />
+                  <Menu className={cn(alwaysShowMenuButton && "h-5 w-5 md:h-6 md:w-6")} />
                 )}
               </Button>
             ) : null}
@@ -114,7 +115,8 @@ export function Navbar({
           <div
             className={cn(
               "grid transition-all duration-200 ease-out",
-              !forceHamburger && "md:hidden",
+              // Expanded menu panel follows the same visibility rule as the menu button.
+              !alwaysShowMenuButton && "md:hidden",
               isOpen
                 ? "visible grid-rows-[1fr] opacity-100 mt-2"
                 : "invisible grid-rows-[0fr] opacity-0 pointer-events-none",
@@ -125,8 +127,9 @@ export function Navbar({
               <div
                 id="mobile-nav-menu"
                 className={cn(
+                  // Container for links revealed by the menu button above.
                   "rounded-md border border-foreground/10 bg-background p-1",
-                  forceHamburger &&
+                  alwaysShowMenuButton &&
                     "w-full sm:ml-auto sm:w-auto sm:min-w-[18rem] md:min-w-[22rem] lg:min-w-[26rem] md:p-2",
                 )}
               >
@@ -137,7 +140,7 @@ export function Navbar({
                       href={link.href}
                       className={cn(
                         "rounded-md px-3 py-2 hover:bg-accent",
-                        forceHamburger && "md:px-4 md:py-3 md:text-base",
+                        alwaysShowMenuButton && "md:px-4 md:py-3 md:text-base",
                       )}
                       onClick={() => setIsOpen(false)}
                     >
@@ -150,10 +153,10 @@ export function Navbar({
           </div>
         ) : null}
 
-        {actions && !forceHamburger ? (
+        {actions && !alwaysShowMenuButton ? (
           <div
             className={cn(
-              mobileInlineActionsSide ? "hidden md:block" : "mt-2",
+              mobileActionsSide ? "hidden md:block" : "mt-2",
               "md:mt-0",
             )}
           >
