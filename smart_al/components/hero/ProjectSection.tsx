@@ -12,14 +12,14 @@ export function ProjectSection({ description, howItWorks, features }: ProjectSec
           Project Description
         </h2>
 
-        <p className="mt-6 text-base text-white/70 leading-relaxed text-center">
+        <p className="mt-6 text-base text-slate-600 dark:text-white/70 leading-relaxed text-center">
           {description}
         </p>
 
         <h3 className="mt-10 text-2xl sm:text-3xl font-semibold tracking-tight text-center">
           How does it work?
         </h3>
-        <p className="mt-4 text-sm sm:text-base text-white/70 leading-relaxed text-center">
+        <p className="mt-4 text-sm sm:text-base text-slate-600 dark:text-white/70 leading-relaxed text-center">
           {howItWorks}
         </p>
 
@@ -28,7 +28,7 @@ export function ProjectSection({ description, howItWorks, features }: ProjectSec
         </h2>
 
         <div className="mt-4 flex justify-center">
-          <ul className="mt-4 space-y-2 text-sm sm:text-base text-white/70 text-center max-w-3xl">
+          <ul className="mt-4 space-y-2 text-sm sm:text-base text-slate-600 dark:text-white/70 text-center max-w-3xl">
             {features.map((f) => (
               <li key={f} className="flex justify-center gap-2">
                 <span>•</span>

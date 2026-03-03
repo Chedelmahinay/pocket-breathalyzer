@@ -15,7 +15,7 @@ export function Hero() {
       </h1>
 
       {/* Subtitle */}
-      <p className="text-lg sm:text-xl text-gray-300 max-w-xl">
+      <p className="text-lg sm:text-xl text-slate-600 dark:text-gray-300 max-w-xl">
         A student-led IoT breathalyzer project at Metropolia University
       </p>
 
@@ -38,7 +38,7 @@ export function Hero() {
           features={KEY_FEATURES}
         />
       </div>
-      <div className="w-full max-w-5xl h-px bg-gradient-to-r from-transparent via-black/10 to-black mt-12" />
+      <div className="w-full max-w-5xl h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent dark:via-white/10 mt-12" />
     </section>
   );
 }
