@@ -56,8 +56,8 @@ void bac_start_measurement(void)
         snprintf(s, sizeof(s), "%d", i);
 
         for (int j = 0; j < LCD_WIDTH * LCD_HEIGHT; j++) fb[j] = 0x0000;
-        draw_string_buf(fb, 30, 60, "BLOW ME", 0x07E0);
-        draw_string_buf(fb, 60, 80, s, 0x07E0);
+        draw_string_buf(fb, 22, 60, "BLOW ME", 0x07E0);
+        draw_string_buf(fb, 60, 90, s, 0x07E0);
 
         for (int y = 0; y < LCD_HEIGHT; y += PARALLEL_LINES) {
             send_lines(y, &fb[y * LCD_WIDTH]);
@@ -79,7 +79,7 @@ void bac_start_measurement(void)
     xQueueOverwrite(adc_queue, &avg);
 
     for (int i = 0; i < LCD_WIDTH * LCD_HEIGHT; i++) fb[i] = 0x0000;
-    draw_string_buf(fb, 20, 80, out, 0x07E0);
+    draw_string_buf(fb, 18, 60, out, 0x07E0);
 
     for (int y = 0; y < LCD_HEIGHT; y += PARALLEL_LINES) {
         send_lines(y, &fb[y * LCD_WIDTH]);
