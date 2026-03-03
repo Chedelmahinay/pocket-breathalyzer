@@ -71,7 +71,8 @@ void bac_start_measurement(void)
 
     float sum = 0;
     for (int i = 0; i < sample_index; i++) sum += samples[i];
-    float avg = (sample_index > 0) ? sum / sample_index : 0;
+    float avg = (sample_index > 0) ? sum / sample_index : 0; //calculate mg/ml
+    avg = avg / 100; // mg/ml to promille
 
     char out[32];
     snprintf(out, sizeof(out), "AVG %.2f", avg);
