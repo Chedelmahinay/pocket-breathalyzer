@@ -7,10 +7,9 @@ export default function ProtectedPage() {
   const [data, setData] = useState<number | null>(null);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
-  // supabase connection
   const [supabase] = useState(() => createClient());
 
-  const persistMeasurement = useCallback(
+  const saveMeasurementToDatabase = useCallback(
     async (value: number) => {
       if (!Number.isFinite(value)) return; 
 
@@ -37,9 +36,9 @@ export default function ProtectedPage() {
     (value: number) => {
       // Update UI immediately
       setData(value);
-      void persistMeasurement(value);
+      void saveMeasurementToDatabase(value);
     },
-    [persistMeasurement],
+    [saveMeasurementToDatabase],
   );
 
   return (
