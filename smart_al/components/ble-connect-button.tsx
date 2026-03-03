@@ -89,11 +89,12 @@ export function BleConnectButton({ onData }: BleConnectButtonProps) {
           const data = dv.getFloat32(0, true);
           const roundedData: number = parseFloat(data.toFixed(2));
           console.log("maxValue:", maxValue);
-          if (roundedData > maxValue){
-            maxValue = roundedData;
-            console.log("Received:", roundedData);
-            onData(roundedData);
-          }
+          onData(roundedData);
+          // if (roundedData > maxValue){  //old code
+          //   maxValue = roundedData;
+          //   console.log("Received:", roundedData);
+          //   onData(roundedData);
+          // }
         }
       );
 
