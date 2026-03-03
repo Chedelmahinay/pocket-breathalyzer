@@ -17,6 +17,7 @@
 #define PIN_NUM_CS   5
 #define PIN_NUM_DC   2
 #define PIN_NUM_RST  4
+#define FONT_SCALE 2
 
 // #define LCD_WIDTH  128
 // #define LCD_HEIGHT 160
@@ -299,10 +300,14 @@ static void draw_char_buf(uint16_t *buf, int x, int y, char c, uint16_t color)
     for (int i = 0; i < 5; i++) {
         for (int j = 0; j < 7; j++) {
             if (g[i] & (1 << j)) {
-                int px = x + i;
-                int py = y + j;
-                if (px < LCD_WIDTH && py < LCD_HEIGHT)
-                    buf[py * LCD_WIDTH + px] = color;
+                for (int dx = 0; dx < FONT_SCALE; dx++) {
+                    for (int dy = 0; dy < FONT_SCALE; dy++) {
+                        int px = x + i * FONT_SCALE + dx;
+                        int py = y + j * FONT_SCALE + dy;
+                        if (px < LCD_WIDTH && py < LCD_HEIGHT)
+                            buf[py * LCD_WIDTH + px] = color;
+                    }
+                }
             }
         }
     }
@@ -312,7 +317,7 @@ void draw_string_buf(uint16_t *buf, int x, int y, const char *s, uint16_t color)
 {
     while (*s) {
         draw_char_buf(buf, x, y, *s, color);
-        x += 6;
+        x += (5 * FONT_SCALE) + FONT_SCALE;
         s++;
     }
 }
