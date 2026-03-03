@@ -46,7 +46,7 @@ function ResultsTableWrapper({
 }: {
   searchParams?: Promise<{ page?: string }>;
 }) {
-  // Resolve search params inside Suspense to avoid blocking the route.
+  // Resolve search params inside Suspense to avoid blocking the route
   const resolvedParams = use(
     searchParams ?? Promise.resolve<{ page?: string }>({})
   );
@@ -70,7 +70,7 @@ async function ResultsTable({ page }: { page: number }) {
   const end = begin + pageSize - 1;
 
   const { data: dbData, error, count } = await supabase
-    .from("measurements_with_username") // This view joins measurements with users to get the username in one query.
+    .from("measurements_with_username") // This view joins measurements with users to get the username in one query
     .select("username, bac, created_at, user_id", { count: "exact" })
     .eq("user_id", authData.user.id)
     .order("created_at", { ascending: false })
@@ -84,7 +84,7 @@ async function ResultsTable({ page }: { page: number }) {
     );
   }
 
-  // Defensive sort to keep order stable even if backend changes.
+  // Defensive sort to keep order stable 
   const data =
     (dbData as ResultRow[] | null)?.sort((a, b) => {
       const timeA = a.created_at ? Date.parse(a.created_at) : 0;
