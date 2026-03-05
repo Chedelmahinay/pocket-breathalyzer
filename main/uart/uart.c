@@ -51,7 +51,7 @@ void bac_start_measurement(void)
         send_line_finish();
     }
 
-    for (int i = 7; i > 0; i--) {
+    for (int i = 4; i > 0; i--) {
         char s[8];
         snprintf(s, sizeof(s), "%d", i);
 
