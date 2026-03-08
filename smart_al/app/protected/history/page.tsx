@@ -24,7 +24,7 @@ export default function ResultsPage({ searchParams }: ResultsPageProps) {
           History
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          shows your latest test results
+          Shows your latest test results
         </p>
       </div>
 

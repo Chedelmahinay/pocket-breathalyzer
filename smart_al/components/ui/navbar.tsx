@@ -115,7 +115,6 @@ export function Navbar({
           <div
             className={cn(
               "grid transition-all duration-200 ease-out",
-              // Expanded menu panel follows the same visibility rule as the menu button.
               !alwaysShowMenuButton && "md:hidden",
               isOpen
                 ? "visible grid-rows-[1fr] opacity-100 mt-2"
@@ -127,7 +126,7 @@ export function Navbar({
               <div
                 id="mobile-nav-menu"
                 className={cn(
-                  // Container for links revealed by the menu button above.
+                  // Container for links revealed by the menu button 
                   "rounded-md border border-foreground/10 bg-background p-1",
                   alwaysShowMenuButton &&
                     "w-full sm:ml-auto sm:w-auto sm:min-w-[18rem] md:min-w-[22rem] lg:min-w-[26rem] md:p-2",
