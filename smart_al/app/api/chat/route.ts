@@ -17,7 +17,7 @@ type MeasurementRow = {
 
 const MAX_MESSAGES = 12;
 const MAX_MEASUREMENTS = 5;
-const CHAT_MODEL = process.env.GOOGLE_CHAT_MODEL ?? "gemini-2.0-flash";
+const CHAT_MODEL = process.env.GOOGLE_CHAT_MODEL ?? "gemini-2.5-flash";
 
 const BASE_SYSTEM_PROMPT = `
 You are a health assistant for Smart-Al users.
