@@ -1,9 +1,7 @@
 #include "adc_fanout.h"
-
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
-
 #include "esp_log.h"
 
 #define TAG "adc_fanout"
@@ -18,9 +16,6 @@ static void adc_fanout_task(void *arg)
 {
     fanout_params_t *p = (fanout_params_t *)arg;
     float value = 0.0f;
-
-    ESP_LOGI(TAG, "fanout started (src=%p ble=%p oled=%p)",
-             (void*)p->src_q, (void*)p->ble_q, (void*)p->oled_q);
 
     while (1) {
         if (xQueueReceive(p->src_q, &value, portMAX_DELAY) == pdTRUE) {

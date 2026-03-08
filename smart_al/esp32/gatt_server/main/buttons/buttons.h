@@ -19,7 +19,7 @@ typedef struct {
 
 bool buttons_hw_init(gpio_num_t button_gpio);
 bool buttons_hw_init_multi(gpio_num_t gpio_a, gpio_num_t gpio_b);
+bool buttons_init(QueueHandle_t out_queue, gpio_num_t gpio_a, gpio_num_t gpio_b);
 
 void buttons_task(void *param);
 
-bool buttons_init(QueueHandle_t out_queue, gpio_num_t gpio_a, gpio_num_t gpio_b);

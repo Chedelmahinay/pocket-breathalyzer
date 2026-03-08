@@ -3,32 +3,27 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
-
 #include "driver/i2c_master.h"
 #include "esp_log.h"
-
 #include "ssd1306.h"
 #include "font_latin_8x8.h"
-
 #include "buttons/buttons.h"
 #include "icons.h"
 
+#define BTN_TOGGLE_GPIO  GPIO_NUM_9
+#define BTN_CONFIRM_GPIO GPIO_NUM_4
 #define OLED_I2C_PORT   I2C_NUM_0
 #define OLED_SDA_GPIO   GPIO_NUM_19
 #define OLED_SCL_GPIO   GPIO_NUM_20
 #define OLED_I2C_ADDR   0x3C
-
-#define BTN_TOGGLE_GPIO  GPIO_NUM_9
-#define BTN_CONFIRM_GPIO GPIO_NUM_4
-
 #define TAG "oled"
-
 #define UI_TICK_MS         250
 #define BAC_CHANGE_EPSILON 0.0003f
+#define OLED_TEXT_BUF_SZ 16
+#define OLED_TEXT_BUF_SZ_2 12
 
 typedef enum {
     SEL_START = 0,
@@ -46,7 +41,6 @@ typedef struct {
     QueueHandle_t adc_q;   
 } oled_task_params_t;
 
-// static. might be dangerous but only used by oled_task
 static int  g_batt_percent = 87;
 static bool g_mq3_ready    = true;
 static bool g_ble_ready    = false;
@@ -64,7 +58,8 @@ static void draw_text_at(ssd1306_handle_t oled, uint8_t page, uint8_t seg, const
 
         ssd1306_display_image(oled, page, seg, img, 8);
         seg += 8;
-        if (seg >= 128) break;
+        if (seg >= 128) 
+        break;
     }
 }
 
@@ -98,15 +93,9 @@ static void draw_top_bar_static(ssd1306_handle_t oled)
 
 static void clear_content_area(ssd1306_handle_t oled)
 {
-
     for (int row = 2; row <= 7; row++) {
         ssd1306_display_text(oled, row, "                ", false); 
     }
-}
-
-static void draw_menu_static(ssd1306_handle_t oled)
-{
-    clear_content_area(oled);
 }
 
 static void draw_menu_selection_only(ssd1306_handle_t oled, menu_sel_t sel)
@@ -132,11 +121,11 @@ static void make_centered_x2(char *out, size_t out_sz, const char *txt)
 }
 
 static void draw_bac_centered_x2(ssd1306_handle_t oled, float bac)
-{
-    char num[12];
+{ 
+    char num[OLED_TEXT_BUF_SZ_2];
     snprintf(num, sizeof(num), "%0.3f", (double)bac);
 
-    char line[16];
+    char line[OLED_TEXT_BUF_SZ];
     make_centered_x2(line, sizeof(line), num);
     ssd1306_display_text_x2(oled, 4, line, false);
 }
@@ -144,12 +133,8 @@ static void draw_bac_centered_x2(ssd1306_handle_t oled, float bac)
 static void draw_start_screen_content(ssd1306_handle_t oled)
 {
     clear_content_area(oled);
-
-    char line[16];
-    make_centered_x2(line, sizeof(line), "0.000");
-    ssd1306_display_text_x2(oled, 4, line, false);
+    draw_bac_centered_x2(oled, 0.0f);
 }
-
 
 static void draw_results_screen_content(ssd1306_handle_t oled)
 {
@@ -158,7 +143,6 @@ static void draw_results_screen_content(ssd1306_handle_t oled)
     ssd1306_display_text(oled, 5, "GPIO4 = back", false);
 }
 
-// OLED
 static void oled_task(void *arg)
 {
     oled_task_params_t *p = (oled_task_params_t *)arg;
@@ -171,12 +155,22 @@ static void oled_task(void *arg)
         .clk_source = I2C_CLK_SRC_DEFAULT,
         .flags.enable_internal_pullup = true,
     };
-    i2c_new_master_bus(&bus_cfg, &bus);
+
+    if (i2c_new_master_bus(&bus_cfg, &bus) != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to create I2C master bus");
+        vTaskDelete(NULL);
+        return;
+    }
 
     ssd1306_handle_t oled;
     ssd1306_config_t oled_cfg = I2C_SSD1306_128x64_CONFIG_DEFAULT;
     oled_cfg.i2c_address = OLED_I2C_ADDR;
-    ssd1306_init(bus, &oled_cfg, &oled);
+
+    if (ssd1306_init(bus, &oled_cfg, &oled) != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to initialize SSD1306");
+        vTaskDelete(NULL);
+        return;
+    }
 
     ssd1306_clear_display(oled, false);
     draw_top_bar_static(oled);
@@ -187,55 +181,73 @@ static void oled_task(void *arg)
     clear_content_area(oled);
     draw_menu_selection_only(oled, sel);
 
-    ESP_LOGI(TAG, "UI ready.");
+    const TickType_t tick = pdMS_TO_TICKS(UI_TICK_MS);
 
     float last_bac = -999.0f;
-    bool  have_bac = false;
-
-    const TickType_t tick = pdMS_TO_TICKS(UI_TICK_MS);
+    bool have_bac = false;
 
     while (1) {
         button_event_t ev;
 
         if (xQueueReceive(p->button_q, &ev, tick) == pdTRUE) {
-            if (ev.type != BUTTON_EVENT_PRESSED) continue;
-
-            if (screen == SCREEN_MENU) {
-                if (ev.gpio == BTN_TOGGLE_GPIO) {
-                    sel = (sel == SEL_START) ? SEL_RESULTS : SEL_START;
-                    draw_menu_selection_only(oled, sel);
-
-                } else if (ev.gpio == BTN_CONFIRM_GPIO) {
-                    if (sel == SEL_START) {
-                        screen = SCREEN_START;
-                        draw_start_screen_content(oled);
-
-                        last_bac = -999.0f;
-                        have_bac = false;
-                    } else {
-                        screen = SCREEN_RESULTS;
-                        draw_results_screen_content(oled);
+            switch (screen) {
+                case SCREEN_MENU:
+                    if (ev.gpio == BTN_TOGGLE_GPIO) {
+                        sel = (sel == SEL_START) ? SEL_RESULTS : SEL_START;
+                        draw_menu_selection_only(oled, sel);
+                    } else if (ev.gpio == BTN_CONFIRM_GPIO) {
+                        if (sel == SEL_START) {
+                            screen = SCREEN_START;
+                            draw_start_screen_content(oled);
+                            last_bac = -999.0f;
+                            have_bac = false;
+                        } else {
+                            screen = SCREEN_RESULTS;
+                            draw_results_screen_content(oled);
+                        }
                     }
-                }
+                    break;
 
-            } else {
-                if (ev.gpio == BTN_CONFIRM_GPIO) {
+                case SCREEN_START:
+                    if (ev.gpio == BTN_CONFIRM_GPIO) {
+                        screen = SCREEN_MENU;
+                        clear_content_area(oled);
+                        draw_menu_selection_only(oled, sel);
+                    }
+                    break;
+
+                case SCREEN_RESULTS:
+                    if (ev.gpio == BTN_CONFIRM_GPIO) {
+                        screen = SCREEN_MENU;
+                        clear_content_area(oled);
+                        draw_menu_selection_only(oled, sel);
+                    }
+                    break;
+
+                default:
                     screen = SCREEN_MENU;
                     clear_content_area(oled);
                     draw_menu_selection_only(oled, sel);
-                }
+                    break;
             }
-
         } else {
-            if (screen == SCREEN_START && p->adc_q) {
-                float bac_now;
-                if (xQueuePeek(p->adc_q, &bac_now, 0) == pdTRUE) {
-                    if (!have_bac || fabsf(bac_now - last_bac) > BAC_CHANGE_EPSILON) {
-                        draw_bac_centered_x2(oled, bac_now);
-                        last_bac = bac_now;
-                        have_bac = true;
+            switch (screen) {
+                case SCREEN_START:
+                    if (p->adc_q) {
+                        float bac_now;
+                        if (xQueuePeek(p->adc_q, &bac_now, 0) == pdTRUE) {
+                            if (!have_bac || fabsf(bac_now - last_bac) > BAC_CHANGE_EPSILON) {
+                                draw_bac_centered_x2(oled, bac_now);
+                                last_bac = bac_now;
+                                have_bac = true;
+                            }
+                        }
                     }
-                }
+                    break;
+
+                case SCREEN_MENU:
+                case SCREEN_RESULTS:
+                    break;
             }
         }
     }
@@ -246,6 +258,5 @@ void oled_init(QueueHandle_t button_q, QueueHandle_t adc_q)
     static oled_task_params_t params;
     params.button_q = button_q;
     params.adc_q    = adc_q;
-
     xTaskCreate(oled_task, "oled_task", 4096, &params, 5, NULL);
 }
