@@ -20,10 +20,10 @@ export default function ResultsPage({ searchParams }: ResultsPageProps) {
     <div className="mx-auto w-full max-w-6xl p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-          Ranking
+          Weekly Ranking
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          top results across all users
+          Weekly ranking of users based on their highest BAC values
         </p>
       </div>
 
@@ -39,13 +39,12 @@ export default function ResultsPage({ searchParams }: ResultsPageProps) {
     </div>
   );
 }
-
+// Wrapper to resolve search params inside suspense and avoid blocking the route
 function ResultsTableWrapper({
   searchParams,
 }: {
   searchParams?: Promise<{ page?: string }>;
 }) {
-  // Resolve search params inside Suspense to avoid blocking the route.
   const resolvedParams = use(
     searchParams ?? Promise.resolve<{ page?: string }>({})
   );
@@ -68,8 +67,8 @@ async function ResultsTable({ page }: { page: number }) {
   const end = begin + pageSize - 1; 
 
   const { data: dbData, error, count } = await supabase
-    .from("weekly_leaderboard_current_week") // This view joins measurements with users to get the username in one query.
-    .select("rank, username, value", { count: "exact" })
+    .from("weekly_leaderboard_current_week") // joins username and results 
+    .select("rank, username, value", { count: "exact" }) //
     .order("rank", { ascending: true })
     .range(begin, end);
 
