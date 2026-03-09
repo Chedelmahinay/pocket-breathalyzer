@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { EditProfileForm } from '@/components/edit-profile-form';
 import { UpdatePasswordForm } from '@/components/update-password-form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 // displays the user info in a card form with an edit button to toggle the edit form
 interface User {
   username: string;
@@ -13,6 +14,7 @@ interface User {
   age?: number | null;
   weight?: number | null;
   height?: number | null;
+  gender?: string | null;
   created_at: string;
 }
 
@@ -31,7 +33,7 @@ export function UserCard() {
         if (authUser) {
         const { data, error } = await supabase
           .from('profiles')
-          .select('username, name, age, weight, height, created_at')
+          .select('username, name, age, weight, height, gender, created_at')
           .eq('id', authUser.id) // match by auth user id
           .single();
 
@@ -43,6 +45,7 @@ export function UserCard() {
             age: data.age,
             weight: data.weight,
             height: data.height,
+            gender: data.gender,
             created_at: data.created_at,
           });
           setAuthUserId(authUser.id);
@@ -70,13 +73,14 @@ export function UserCard() {
               {isEditing ? 'Editing' : user.username}
             </CardDescription>
           </div>
-          <button
+          <Button
             type="button"
+            variant="default"
+            size="sm"
             onClick={() => setIsEditing((prev) => !prev)}
-            className="text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
           >
             {isEditing ? 'Close' : 'Edit'}
-          </button>
+          </Button>
         </CardHeader>
         <CardContent>
           {isEditing && authUserId ? (
@@ -88,6 +92,7 @@ export function UserCard() {
               initialAge={user.age}
               initialWeight={user.weight}
               initialHeight={user.height}
+              initialGender={user.gender}
               onSaved={(next) => {    //update the user state when save is pressed 
                 setUser((prev) => (prev ? { ...prev, ...next } : prev));
                 setIsEditing(false);
@@ -116,6 +121,12 @@ export function UserCard() {
                 <span className="text-slate-500 dark:text-slate-400">Height</span>
                 <span className="font-medium text-slate-900 dark:text-slate-100">
                   {user.height ?? '-'}
+                </span>
+              </div>
+              <div className="grid grid-cols-[140px_1fr] items-center gap-6 border-b border-slate-200 pb-3 dark:border-slate-800">
+                <span className="text-slate-500 dark:text-slate-400">Gender</span>
+                <span className="font-medium text-slate-900 dark:text-slate-100">
+                  {user.gender ? user.gender[0].toUpperCase() + user.gender.slice(1) : '-'}
                 </span>
               </div>
               <div className="grid grid-cols-[140px_1fr] items-center gap-6 border-b border-slate-200 pb-3 dark:border-slate-800">
