@@ -10,6 +10,21 @@ type ResultRow = {
   user_id: string | null;
 };
 
+function formatFinnishDateTime(timestamp: string) {
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return "-";
+
+  const datePart = new Intl.DateTimeFormat("fi-FI", {
+    dateStyle: "short",
+  }).format(date);
+  const timePart = new Intl.DateTimeFormat("fi-FI", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+
+  return `${datePart} ${timePart}`;
+}
+
 type ResultsPageProps = {
   searchParams?: Promise<{
     page?: string;
@@ -120,9 +135,9 @@ async function ResultsTable({ page }: { page: number }) {
                       {row.username ?? "Unknown"}
                     </td>
                     <td className="px-4 py-3">{row.bac ?? "-"}</td>
-                    <td className="px-4 py-3 text-slate-500 dark:text-slate-400">
+                    <td className="px-4 py-3">
                       {row.created_at
-                        ? new Date(row.created_at).toLocaleString()
+                        ? formatFinnishDateTime(row.created_at)
                         : "-"}
                     </td>
                   </tr>

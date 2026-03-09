@@ -90,7 +90,11 @@ export function BleConnectButton({ onData }: BleConnectButtonProps) {
           const roundedData: number = parseFloat(data.toFixed(2));
           console.log("maxValue:", maxValue);
           onData(roundedData);
-         
+          // if (roundedData > maxValue){  //old code
+          //   maxValue = roundedData;
+          //   console.log("Received:", roundedData);
+          //   onData(roundedData);
+          // }
         }
       );
 
