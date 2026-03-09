@@ -24,7 +24,7 @@ export default function Home() {
               <EnvVarWarning />
             ) : (
               <Suspense>
-                <AuthButton />
+                <AuthButton showGoProtected />
               </Suspense>
             )
           }

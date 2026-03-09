@@ -3,10 +3,13 @@ import { Button } from "./ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { LogoutButton } from "./logout-button";
 
-export async function AuthButton() {
+type AuthButtonProps = {
+  showGoProtected?: boolean;
+};
+
+export async function AuthButton({ showGoProtected = false }: AuthButtonProps) {
   const supabase = await createClient();
 
-  // You can also use getUser() which will be slower.
   const {
     data: { user },
   } = await supabase.auth.getUser();
