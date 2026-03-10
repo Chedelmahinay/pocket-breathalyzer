@@ -1,31 +1,32 @@
-"use client";
+  "use client";
 
-import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+  import { cn } from "@/lib/utils";
+  import { createClient } from "@/lib/supabase/client";
+  import { Button } from "@/components/ui/button";
+  import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+  } from "@/components/ui/card";
+  import { Input } from "@/components/ui/input";
+  import { Label } from "@/components/ui/label";
+  import Link from "next/link";
+  import { useRouter } from "next/navigation";
+  import { useState } from "react";
 
-export function SignUpForm({
-  className,
-  ...props
-}: React.ComponentPropsWithoutRef<"div">) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [repeatPassword, setRepeatPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+  export function SignUpForm({
+    className,
+    ...props
+  }: React.ComponentPropsWithoutRef<"div">) {
+    const [email, setEmail] = useState("");
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
+    const [repeatPassword, setRepeatPassword] = useState("");
+    const [error, setError] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const router = useRouter();
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,81 +41,127 @@ export function SignUpForm({
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
+      const nextUsername = username.trim();
+      const nextEmail = email.trim();
+      if (!nextUsername) {
+        setError("Username is required");
+        return;
+      }
+      // Username availability is enforced by the database unique constraint.
+      // sign up user to database 
+      const { data, error } = await supabase.auth.signUp({
+        email: nextEmail,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/protected`,
+          data: { username: nextUsername }, // add username to metadata
         },
       });
-      if (error) throw error;
-      router.push("/auth/sign-up-success");
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      if (error) {
+        const message = error.message ?? "An error occurred";
+        const lowered = message.toLowerCase();
+        if (
+          lowered.includes("database error saving new user") ||
+          lowered.includes("duplicate") ||
+          lowered.includes("unique constraint") ||
+          lowered.includes("profiles_username_lower_key") ||
+          lowered.includes("username")
+        ) {
+          setError("Username already taken. Please choose another.");
+        } else {
+          setError(message);
+        }
+        return;
+      }
+      // check if email is in use
+      const identityCount = data?.user?.identities?.length ?? 0;
+      if (data?.user && identityCount === 0) {
+        setError("Email already registered");
+        return;
+      }
 
-  return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Sign up</CardTitle>
-          <CardDescription>Create a new account</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSignUp}>
-            <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+      if (data) {
+        console.log("Sign-up successful:", data);
+      }
+      
+        router.push("/auth/sign-up-success");
+      } catch (error: unknown) {
+        setError(error instanceof Error ? error.message : "An error occurred");
+      } finally {
+        setIsLoading(false);
+      }
+    };  
+
+    return (
+      <div className={cn("flex flex-col gap-6", className)} {...props}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">Sign up</CardTitle>
+            <CardDescription>Create a new account</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSignUp}>
+              <div className="flex flex-col gap-6">
+                <div className="grid gap-2">
+                  <Label htmlFor="username">Username</Label>
+                   <Input
+                    id="username"
+                    type="text"
+                    placeholder="username"
+                    required
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                 />
-              </div>
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
                 </div>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="repeat-password">Repeat Password</Label>
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="m@example.com"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
                 </div>
-                <Input
-                  id="repeat-password"
-                  type="password"
-                  required
-                  value={repeatPassword}
-                  onChange={(e) => setRepeatPassword(e.target.value)}
-                />
+                <div className="grid gap-2">
+                  <div className="flex items-center">
+                    <Label htmlFor="password">Password</Label>
+                  </div>
+                  <Input
+                    id="password"
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <div className="flex items-center">
+                    <Label htmlFor="repeat-password">Repeat Password</Label>
+                  </div>
+                  <Input
+                    id="repeat-password"
+                    type="password"
+                    required
+                    value={repeatPassword}
+                    onChange={(e) => setRepeatPassword(e.target.value)}
+                  />
+                </div>
+                {error && <p className="text-sm text-red-500">{error}</p>}
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Creating an account..." : "Sign up"}
+                </Button>
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Creating an account..." : "Sign up"}
-              </Button>
-            </div>
-            <div className="mt-4 text-center text-sm">
-              Already have an account?{" "}
-              <Link href="/auth/login" className="underline underline-offset-4">
-                Login
-              </Link>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+              <div className="mt-4 text-center text-sm">
+                Already have an account?{" "}
+                <Link href="/auth/login" className="underline underline-offset-4">
+                  Login
+                </Link>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
