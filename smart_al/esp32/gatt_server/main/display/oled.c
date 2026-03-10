@@ -11,7 +11,6 @@
 #include "ssd1306.h"
 #include "font_latin_8x8.h"
 #include "buttons/buttons.h"
-#include "icons.h"
 #include "results/results.h"
 #include "adc/oneshot_read.h"
 
@@ -44,93 +43,25 @@ typedef struct {
     QueueHandle_t adc_q;   
 } oled_task_params_t;
 
-static int  g_batt_percent = 87;
-static bool g_mq3_ready    = true;
-static bool g_ble_ready    = false;
-
-static void draw_text_at(ssd1306_handle_t oled, uint8_t page, uint8_t seg, const char *text, bool invert)
-{
-    uint8_t img[8];
-
-    for (int i = 0; text[i] != '\0'; i++) {
-        memcpy(img, font_latin_8x8_tr[(uint8_t)text[i]], 8);
-
-        if (invert) {
-            for (int k = 0; k < 8; k++) img[k] = (uint8_t)~img[k];
-        }
-
-        ssd1306_display_image(oled, page, seg, img, 8);
-        seg += 8;
-        if (seg >= 128) 
-        break;
-    }
-}
-
-static const uint8_t *select_batt_icon(int batt_percent)
-{
-    if (batt_percent < 0) batt_percent = 0;
-    if (batt_percent > 100) batt_percent = 100;
-
-    if (batt_percent >= 70) return icon_batt_full_16x8;
-    if (batt_percent >= 30) return icon_batt_half_16x8;
-    return icon_batt_empty_16x8;
-}
-
-static void draw_top_bar_static(ssd1306_handle_t oled)
-{
-    const uint8_t *batt_icon = select_batt_icon(g_batt_percent);
-
-    ssd1306_display_bitmap(oled, 0, 0, batt_icon, ICON_W, ICON_H, false);
-    ssd1306_display_bitmap(oled, 52, 0, icon_mq3_16x8, ICON_W, ICON_H, false);
-    ssd1306_display_bitmap(oled, 92, 0, icon_ble_16x8, ICON_W, ICON_H, false);
-
-    char btxt[8];
-    snprintf(btxt, sizeof(btxt), "%d%%", g_batt_percent);
-    draw_text_at(oled, 0, 18, btxt, false);
-
-    draw_text_at(oled, 0, 70, g_mq3_ready ? "OK" : "X", false);
-    draw_text_at(oled, 0, 110, g_ble_ready ? "OK" : "X", false);
-
-    ssd1306_display_text(oled, 1, "----------------", false);
-}
-
 static void clear_content_area(ssd1306_handle_t oled)
 {
-    for (int row = 2; row <= 7; row++) {
+    for (int row = 0; row <= 7; row++) {
         ssd1306_display_text(oled, row, "                ", false); 
     }
 }
 
 static void draw_menu_selection_only(ssd1306_handle_t oled, menu_sel_t sel)
 {
-    ssd1306_display_text_x2(oled, 3, "  START ",  (sel == SEL_START));
-    ssd1306_display_text_x2(oled, 6, " RESULTS", (sel == SEL_RESULTS));
-}
-
-static void make_centered_x2(char *out, size_t out_sz, const char *txt)
-{
-    const int cols = 8;
-    int len = (int)strlen(txt);
-    if (len > cols) len = cols;
-
-    int lead = (cols - len) / 2;
-    int idx = 0;
-
-    for (int i = 0; i < lead && idx < (int)out_sz - 1; i++) out[idx++] = ' ';
-    for (int i = 0; i < len  && idx < (int)out_sz - 1; i++) out[idx++] = txt[i];
-    while (idx < cols && idx < (int)out_sz - 1) out[idx++] = ' ';
-
-    out[idx] = '\0';
+    ssd1306_display_text_x2(oled, 2, "  START ",  (sel == SEL_START));
+    ssd1306_display_text_x2(oled, 5, " RESULTS", (sel == SEL_RESULTS));
 }
 
 static void draw_bac_centered_x2(ssd1306_handle_t oled, float bac)
-{ 
-    char num[OLED_TEXT_BUF_SZ_2];
-    snprintf(num, sizeof(num), "%0.3f", (double)bac);
-
-    char line[OLED_TEXT_BUF_SZ];
-    make_centered_x2(line, sizeof(line), num);
-    ssd1306_display_text_x2(oled, 4, line, false);
+{
+    char num[12];
+    snprintf(num, sizeof(num), "  %0.3f", (double)bac);
+    int len = strlen(num);
+    ssd1306_display_text_x2(oled, 3, num, false);
 }
 
 static void draw_start_screen_content(ssd1306_handle_t oled)
@@ -148,7 +79,7 @@ static void draw_results_screen_content(ssd1306_handle_t oled)
         return;
     }
 
-    ssd1306_display_text(oled, 2, "Max 3 Peaks:", false);
+    ssd1306_display_text(oled, 1, "Max 3 Peaks:", false);
 
     char line[OLED_LINE_BUF_SZ];
     int max_rows = (snapshot.count < RESULTS_MAX_COUNT) ? snapshot.count : RESULTS_MAX_COUNT;
@@ -173,7 +104,6 @@ static void oled_task(void *arg)
     };
 
     if (i2c_new_master_bus(&bus_cfg, &bus) != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to create I2C master bus");
         vTaskDelete(NULL);
         return;
     }
@@ -183,13 +113,11 @@ static void oled_task(void *arg)
     oled_cfg.i2c_address = OLED_I2C_ADDR;
 
     if (ssd1306_init(bus, &oled_cfg, &oled) != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to initialize SSD1306");
         vTaskDelete(NULL);
         return;
     }
 
     ssd1306_clear_display(oled, false);
-    draw_top_bar_static(oled);
 
     screen_t screen = SCREEN_MENU;
     menu_sel_t sel = SEL_START;
