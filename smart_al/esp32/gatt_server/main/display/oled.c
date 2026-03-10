@@ -12,6 +12,8 @@
 #include "font_latin_8x8.h"
 #include "buttons/buttons.h"
 #include "icons.h"
+#include "results/results.h"
+#include "adc/oneshot_read.h"
 
 #define BTN_TOGGLE_GPIO  GPIO_NUM_9
 #define BTN_CONFIRM_GPIO GPIO_NUM_4
@@ -24,6 +26,7 @@
 #define BAC_CHANGE_EPSILON 0.0003f
 #define OLED_TEXT_BUF_SZ 16
 #define OLED_TEXT_BUF_SZ_2 12
+#define OLED_LINE_BUF_SZ 21
 
 typedef enum {
     SEL_START = 0,
@@ -139,8 +142,21 @@ static void draw_start_screen_content(ssd1306_handle_t oled)
 static void draw_results_screen_content(ssd1306_handle_t oled)
 {
     clear_content_area(oled);
-    ssd1306_display_text(oled, 3, "RESULTS SCREEN", false);
-    ssd1306_display_text(oled, 5, "GPIO4 = back", false);
+    results_snapshot_t snapshot;
+    
+    if (!results_get_snapshot(&snapshot) || snapshot.count <= 0) {
+        return;
+    }
+
+    ssd1306_display_text(oled, 2, "Max 3 Peaks:", false);
+
+    char line[OLED_LINE_BUF_SZ];
+    int max_rows = (snapshot.count < RESULTS_MAX_COUNT) ? snapshot.count : RESULTS_MAX_COUNT;
+
+    for (int i = 0; i < max_rows && i < 3; i++) {
+        snprintf(line, sizeof(line), "%.3f", (double)snapshot.values[i]);
+        ssd1306_display_text(oled, 3 + i, line, false);
+    }
 }
 
 static void oled_task(void *arg)
@@ -197,6 +213,7 @@ static void oled_task(void *arg)
                         draw_menu_selection_only(oled, sel);
                     } else if (ev.gpio == BTN_CONFIRM_GPIO) {
                         if (sel == SEL_START) {
+                            adc_reset_session_max();
                             screen = SCREEN_START;
                             draw_start_screen_content(oled);
                             last_bac = -999.0f;
@@ -210,6 +227,7 @@ static void oled_task(void *arg)
 
                 case SCREEN_START:
                     if (ev.gpio == BTN_CONFIRM_GPIO) {
+                        adc_commit_session_max();
                         screen = SCREEN_MENU;
                         clear_content_area(oled);
                         draw_menu_selection_only(oled, sel);
@@ -245,8 +263,9 @@ static void oled_task(void *arg)
                     }
                     break;
 
-                case SCREEN_MENU:
                 case SCREEN_RESULTS:
+                    break;
+                case SCREEN_MENU:
                     break;
             }
         }

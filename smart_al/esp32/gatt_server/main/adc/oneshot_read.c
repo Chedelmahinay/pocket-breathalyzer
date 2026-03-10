@@ -9,9 +9,16 @@
 #include "esp_adc/adc_cali.h"
 #include "esp_adc/adc_cali_scheme.h"
 #include "nvs.h"
+#include "results/results.h"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_INFO
+
+#define ADC_SAMPLE_PERIOD_MS      1000
+#define ADC_CALIBRATION_SAMPLES   10
+#define BAC_SCALE_FACTOR          0.0001f
+
 static float maxValue = 0.0f;
+static float sessionMaxValue = 0.0f;
 
 const static char *ADC_TAG = "ADC";
 const static char *NVS_TAG = "NVS";
@@ -47,6 +54,9 @@ static void adc_task(void *arg)
         maxValue = 0.0f;
     }
 
+    results_init(maxValue);
+    sessionMaxValue = 0.0f;
+
     while (1) {
         ESP_ERROR_CHECK(
             adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN0, &adc_raw[0][0])
@@ -58,8 +68,8 @@ static void adc_task(void *arg)
             calibration_sum += adc_raw[0][0];
             calibration_samples++;
 
-            if (calibration_samples >= 10) {
-                baseline = calibration_sum / 10;
+            if (calibration_samples >= ADC_CALIBRATION_SAMPLES) {
+                baseline = calibration_sum / ADC_CALIBRATION_SAMPLES;
                 calibrated = true;
             }
 
@@ -67,19 +77,23 @@ static void adc_task(void *arg)
         } else {
             int diff = adc_raw[0][0] - baseline;
             if (diff < 0) diff = 0;
-            bac_value = (float)diff * 0.0001f;
+            bac_value = (float)diff * BAC_SCALE_FACTOR;
         }
 
-        if (bac_value > maxValue){
+        if (bac_value > maxValue) {
             maxValue = bac_value;
-            nvs_save_max_value(maxValue);            
+            nvs_save_max_value(maxValue);
         }
-        ESP_LOGI(ADC_TAG, "maxValue: %f",  maxValue);
+
+        if (bac_value > sessionMaxValue) {
+            sessionMaxValue = bac_value;
+        }
+
         ESP_LOGI(ADC_TAG, "bac: %f",  bac_value);
 
         xQueueOverwrite(adc_queue, &bac_value);
 
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(ADC_SAMPLE_PERIOD_MS));
     }
 }
 
@@ -101,4 +115,16 @@ void adc_init(QueueHandle_t q)
     ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, EXAMPLE_ADC1_CHAN1, &config));
 
     xTaskCreate(adc_task, "adc_task", 2048, adc1_handle, tskIDLE_PRIORITY, NULL);
+}
+
+void adc_reset_session_max(void)
+{
+    sessionMaxValue = 0.0f;
+}
+
+void adc_commit_session_max(void)
+{
+    if (sessionMaxValue > 0.0f) {
+        results_note_max(sessionMaxValue);
+    }
 }

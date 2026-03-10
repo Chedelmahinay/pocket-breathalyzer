@@ -8,12 +8,7 @@
 #include "ble/gatts_demo.h"
 #include "buttons/buttons.h"
 #include "display/oled.h"
-#include "fanout/adc_fanout.h"
-#include <stdint.h>            
-#include "freertos/FreeRTOS.h" 
-#include "freertos/queue.h"    
-#include "adc/oneshot_read.h"  
-#include "ble/gatts_demo.h"    
+#include "fanout/adc_fanout.h"  
 #include "nvs.h"
 
 #define TAG "main"
@@ -47,10 +42,4 @@ void app_main(void)
     buttons_init(button_queue, BTN_TOGGLE_GPIO, BTN_CONFIRM_GPIO);
     oled_init(button_queue, oled_q);
 
-/*   ESP_LOGI(TAG, "Q: adc_src=%p ble=%p oled=%p btn=%p",
-             (void*)adc_src_q, (void*)ble_q, (void*)oled_q, (void*)button_queue);
-
-     ESP_LOGI(TAG, "Buttons: TOGGLE=GPIO%d CONFIRM=GPIO%d",
-             (int)BTN_TOGGLE_GPIO, (int)BTN_CONFIRM_GPIO); 
-*/
 }

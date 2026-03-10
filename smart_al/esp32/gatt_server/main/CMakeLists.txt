@@ -7,6 +7,7 @@ idf_component_register(
         "display/oled.c"
         "nvs/nvs.c"
         "fanout/adc_fanout.c"
+        "results/results.c"
     INCLUDE_DIRS
         "."
         "adc"
@@ -15,4 +16,5 @@ idf_component_register(
         "display"
         "nvs"
         "fanout"
+        "results"
 )

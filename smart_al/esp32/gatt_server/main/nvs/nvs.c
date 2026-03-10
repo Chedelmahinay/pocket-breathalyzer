@@ -51,3 +51,43 @@ esp_err_t nvs_save_max_value(float value)
     nvs_close(nvs);
     return err;
 }
+
+esp_err_t nvs_save_blob(const char *key, const void *data, size_t size)
+{
+    if (key == NULL || data == NULL || size == 0) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    nvs_handle_t nvs;
+    esp_err_t err = nvs_open("storage", NVS_READWRITE, &nvs);
+    if (err != ESP_OK) {
+        return err;
+    }
+
+    err = nvs_set_blob(nvs, key, data, size);
+    if (err == ESP_OK) {
+        err = nvs_commit(nvs);
+    }
+
+    nvs_close(nvs);
+    return err;
+}
+
+esp_err_t nvs_load_blob(const char *key, void *data, size_t size)
+{
+    if (key == NULL || data == NULL || size == 0) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    nvs_handle_t nvs;
+    esp_err_t err = nvs_open("storage", NVS_READONLY, &nvs);
+    if (err != ESP_OK) {
+        return err;
+    }
+
+    size_t stored_size = size;
+    err = nvs_get_blob(nvs, key, data, &stored_size);
+
+    nvs_close(nvs);
+    return err;
+}
