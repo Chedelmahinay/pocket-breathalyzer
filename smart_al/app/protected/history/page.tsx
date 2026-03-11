@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Suspense, use } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { formatFinnishDateTime } from "@/lib/dateFormatter";
 import Link from "next/link";
 
 type ResultRow = {
@@ -9,21 +10,6 @@ type ResultRow = {
   created_at: string | null;
   user_id: string | null;
 };
-
-function formatFinnishDateTime(timestamp: string) {
-  const date = new Date(timestamp);
-  if (Number.isNaN(date.getTime())) return "-";
-
-  const datePart = new Intl.DateTimeFormat("fi-FI", {
-    dateStyle: "short",
-  }).format(date);
-  const timePart = new Intl.DateTimeFormat("fi-FI", {
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
-
-  return `${datePart} ${timePart}`;
-}
 
 type ResultsPageProps = {
   searchParams?: Promise<{
