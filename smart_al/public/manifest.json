@@ -1,18 +1,20 @@
 {
   "name": "Smart Al-Meter",
   "short_name": "Al-Meter",
-  "start_url": "https://iot-smart-al.vercel.app/",
-  "display": "fullscreen",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
   "icons": [
     {
-      "src": "icons/512.png",
-      "type": "image/png",
-      "sizes": "512x512"
+      "src": "/icons/192.png",
+      "sizes": "any",
+      "type": "image/png"
     },
-    {
-      "src": "icons/192.png",
-      "type": "image/png",
-      "sizes": "192x192"
+        {
+      "src": "/icons/512.png",
+      "sizes": "any",
+      "type": "image/png"
     }
   ]
 }
