@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Suspense, use } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { formatFinnishDateTime } from "@/lib/dateFormatter";
 import Link from "next/link";
 
 type ResultRow = {
@@ -120,9 +121,9 @@ async function ResultsTable({ page }: { page: number }) {
                       {row.username ?? "Unknown"}
                     </td>
                     <td className="px-4 py-3">{row.bac ?? "-"}</td>
-                    <td className="px-4 py-3 text-slate-500 dark:text-slate-400">
+                    <td className="px-4 py-3">
                       {row.created_at
-                        ? new Date(row.created_at).toLocaleString()
+                        ? formatFinnishDateTime(row.created_at)
                         : "-"}
                     </td>
                   </tr>

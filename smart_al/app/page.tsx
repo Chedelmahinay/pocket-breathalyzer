@@ -12,7 +12,7 @@ export default function Home() {
     <main className="min-h-screen flex flex-col items-center">
       <div className="flex-1 w-full flex flex-col gap-20 items-center">
         <Navbar
-          logo={<Link href="/#home">Smart Al-Test</Link>}
+          logo={<Link href="/#home">Smart Al</Link>}
           mobileActionsSide="right"
           links={[
             { href: "/protected", label: "Dashboard" },

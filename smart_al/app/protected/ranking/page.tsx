@@ -1,12 +1,14 @@
 import { redirect } from "next/navigation";
 import { Suspense, use } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { formatFinnishDateTime } from "@/lib/dateFormatter";
 import Link from "next/link";
 
 type ResultRow = {
   rank: number | null;
   username: string | null;
   value: number | null;
+  measured_at?: string | null;
 };
 
 type ResultsPageProps = {
@@ -67,8 +69,8 @@ async function ResultsTable({ page }: { page: number }) {
   const end = begin + pageSize - 1; 
 
   const { data: dbData, error, count } = await supabase
-    .from("weekly_leaderboard_current_week") // joins username and results 
-    .select("rank, username, value", { count: "exact" }) //
+    .from("weekly_leaderboard_current_week") // joins username and results
+    .select("rank, username, value, measured_at", { count: "exact" })
     .order("rank", { ascending: true })
     .range(begin, end);
 
@@ -106,6 +108,7 @@ async function ResultsTable({ page }: { page: number }) {
                 <th className="px-4 py-3 font-medium">Rank</th>
                 <th className="px-4 py-3 font-medium">Username</th>
                 <th className="px-4 py-3 font-medium">Value</th>
+                <th className="px-4 py-3 font-medium">Timestamp</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
@@ -122,13 +125,16 @@ async function ResultsTable({ page }: { page: number }) {
                       {row.username ?? "Unknown"}
                     </td>
                     <td className="px-4 py-3">{row.value ?? "-"}</td>
+                    <td className="px-4 py-3">
+                      {row.measured_at ? formatFinnishDateTime(row.measured_at) : "-"}
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
                   <td
                     className="px-4 py-6 text-center text-slate-500 dark:text-slate-400"
-                    colSpan={3}
+                    colSpan={4}
                   >
                     No results yet.
                   </td>
